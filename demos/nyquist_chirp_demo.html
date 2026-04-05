@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../assets/design.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+/* Demo-specific layout; shared shell/footer/slider styles are in ../assets/design.css. */
+:root {
+  --line: #d9d9d9;
+  --text: #111111;
+}
+
+#container {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+#controls {
+  width: 100%;
+  padding: 18px 0 16px;
+  box-sizing: border-box;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.control {
+  min-width: 0;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#plot {
+  width: 100%;
+  min-height: 720px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  background: var(--theme-surface-bg, #ffffff);
+}
+</style>
+</head>
+
+<body class="demo-page">
+
+  <div id="container" class="demo-shell">
+  <div id="controls">
+    <div class="control">
+      <div class="row"><label for="fsSlider">Sampling Frekvens (fs)</label><span id="fsVal" class="value"></span></div>
+      <input type="range" min="2" max="80" step="1" value="30" id="fsSlider" class="slider">
+    </div>
+  </div>
+
+  <div id="plot"></div>
+  <div id="top-banner" class="demo-footer">
+    <img class="demo-footer-logo" src="../assets/UiB_PositivEmblem.png" alt="University logo" />
+    <span>Universitetet i Bergen</span>
+    <span>PHYS 116</span>
+  </div>
+</div>
+
+<script>
+const T = 5;
+const f0 = 1;
+const f1 = 20;
+const themeSurfaceBg =
+  getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
+const fsValEl = document.getElementById("fsVal");
+const COOLWARM_SCALE = [
+    [0.0, "#3b4cc0"],
+    [0.1, "#5673e0"],
+    [0.2, "#7396f5"],
+    [0.3, "#92b4fe"],
+    [0.4, "#b2ccfb"],
+    [0.5, "#dddcdc"],
+    [0.6, "#f2cbb7"],
+    [0.7, "#f7ac8e"],
+    [0.8, "#ee8468"],
+    [0.9, "#d65244"],
+    [1.0, "#b40426"]
+];
+
+const N = 4000;
+const t_cont = Array.from({length: N}, (_, i) => i * T / N);
+
+function chirp(t) {
+    return Math.sin(2*Math.PI*(f0*t + (f1-f0)/(2*T)*t*t));
+}
+
+function sinc(x) {
+    if (Math.abs(x) < 1e-6) return 1;
+    return Math.sin(Math.PI*x)/(Math.PI*x);
+}
+
+function sincReconstruct(t_eval, t_sample, x_sample, fs) {
+    const Ts = 1/fs;
+    let y = new Array(t_eval.length).fill(0);
+
+    for (let n = 0; n < t_sample.length; n++) {
+        for (let i = 0; i < t_eval.length; i++) {
+            let tau = (t_eval[i] - t_sample[n]) / Ts;
+            if (Math.abs(tau) < 20) {
+                y[i] += x_sample[n] * sinc(tau);
+            }
+        }
+    }
+    return y;
+}
+
+function computeSpectrogram(x, fs) {
+    const rawWindow = Math.floor(0.8 * fs);
+    let windowSize = Math.max(8, rawWindow);
+    windowSize = Math.min(windowSize, x.length);
+    if (windowSize % 2 === 1) windowSize -= 1;
+    if (windowSize < 4) return {S: [], t_spec: [], f_axis: []};
+
+    const hop = Math.max(1, Math.floor(windowSize / 8));
+    const pad = Math.floor(windowSize / 2);
+    const nfft = windowSize * 4; 
+    const xPad = [
+        ...new Array(pad).fill(0),
+        ...x,
+        ...new Array(pad).fill(0)
+    ];
+    let S = [];
+    let t_spec = [];
+    let f_axis = [];
+
+    for (let k = 0; k <= nfft/2; k++) {
+        f_axis.push(k * fs / nfft);
+    }
+
+    for (let i = 0; i + windowSize <= xPad.length; i += hop) {
+        let segment = xPad.slice(i, i + windowSize);
+
+        // Hann window
+        for (let n = 0; n < windowSize; n++) {
+            segment[n] *= 0.5 * (1 - Math.cos(2*Math.PI*n/(windowSize-1)));
+        }
+
+        let mag = [];
+        for (let k = 0; k <= nfft/2; k++) {
+            let re = 0;
+            let im = 0;
+
+            for (let n = 0; n < windowSize; n++) {
+                let angle = -2 * Math.PI * k * n / nfft;
+                re += segment[n] * Math.cos(angle);
+                im += segment[n] * Math.sin(angle);
+            }
+
+            let val = Math.sqrt(re*re + im*im) / windowSize;
+            mag.push(20 * Math.log10(val + 1e-12));
+        }
+
+        t_spec.push((i - pad + windowSize / 2) / fs);
+        S.push(mag);
+    }
+    const S_T = f_axis.map((_, fIdx) => S.map(row => row[fIdx]));
+
+    return {S: S_T, t_spec, f_axis};
+}
+
+// main update
+function update() {
+    let fs = parseInt(document.getElementById("fsSlider").value);
+    fsValEl.textContent = `${fs} Hz`;
+
+    let t_sample = [];
+    for (let t = 0; t < T; t += 1/fs) t_sample.push(t);
+
+    let x_sample = t_sample.map(chirp);
+    let signal_cont = t_cont.map(chirp);
+
+    let x_recon = sincReconstruct(t_cont, t_sample, x_sample, fs);
+
+    let f_inst = t_cont.map(t => f0 + (f1-f0)*t/T);
+    let nyq = fs/2;
+
+    let spec = computeSpectrogram(x_sample, fs);
+
+    let traces = [
+        {
+            x: t_cont,
+            y: signal_cont,
+            name: "Signal",
+            line: {color: "black"},
+            opacity: 0.5,
+            xaxis: "x",
+            yaxis: "y"
+        },
+        {
+            x: t_cont,
+            y: x_recon,
+            name: "Rekonstruert",
+            line: {color: "red"},
+            xaxis: "x",
+            yaxis: "y"
+        },
+        {
+            x: t_sample,
+            y: x_sample,
+            mode: "markers",
+            name: "Målepunkter",
+            marker: {color: "black", size: 4},
+            xaxis: "x",
+            yaxis: "y"
+        },
+        {
+            z: spec.S,
+            x: spec.t_spec,
+            y: spec.f_axis,
+            type: "heatmap",
+            colorscale: COOLWARM_SCALE,
+            zmin: -100,
+            zmax: -20,
+            zsmooth: false,
+            showscale: false,
+            xaxis: "x2",
+            yaxis: "y2"
+        },
+    ];
+
+    let layout = {
+        font: {family: "Times New Roman, Times, serif", size: 16},
+        paper_bgcolor: themeSurfaceBg,
+        plot_bgcolor: themeSurfaceBg,
+        margin: {l: 0, r: 0, t: 58, b: 10},
+
+        yaxis: {
+            title: {text: "Amplitude", font: {size: 16}},
+            tickfont: {size: 16},
+            domain: [0.56, 0.98],
+            range: [-1.2, 1.2],
+            automargin: true
+        },
+        yaxis2: {
+            title: {text: "Frekvens (Hz)", font: {size: 16}},
+            tickfont: {size: 16},
+            domain: [0.03, 0.44],
+            range: [0, nyq],
+            automargin: true
+        },
+
+        xaxis: {
+            anchor: "y",
+            domain: [0, 1],
+            showticklabels: false,
+            ticks: "",
+            matches: "x2",
+            tickfont: {size: 16}
+        },
+        xaxis2: {
+            anchor: "y2",
+            domain: [0, 1],
+            side: "bottom",
+            title: {text: "Tid (s)", font: {size: 18}},
+            range: [0, T],
+            showticklabels: true,
+            tickfont: {size: 16},
+            automargin: true
+        },
+
+        legend: {
+            orientation: "h",
+            x: 0,
+            xanchor: "left",
+            y: 1.08,
+            yanchor: "bottom",
+            font: {size: 14}
+        }
+    };
+
+    Plotly.newPlot("plot", traces, layout);
+}
+
+document.getElementById("fsSlider").oninput = update;
+update();
+</script>
+
+</body>
+</html>

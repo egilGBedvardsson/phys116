@@ -1,0 +1,45 @@
+<p>
+  Denne demoen viser sammenhengen mellom poler og nuller i z-planet og filterets respons i frekvensdomenet. 
+  Ved å plassere poler og nuller i pol-null-diagrammet kan vi direkte undersøke hvordan dette påvirker både magnituderesponsen og faseresponsen til et diskret system.
+</p>
+
+<p class="doc-eq">\[
+H(z)=g\,\frac{\prod_k (z-z_k)}{\prod_m (z-p_m)}
+\]</p>
+
+<p>
+  Her er \(z_k\) nullene, \(p_m\) polene og \(g\) en forsterkningsfaktor. 
+  Nuller svekker responsen ved bestemte frekvenser, mens poler forsterker responsen i områder der de ligger nær enhetsirkelen. 
+  Frekvensresponsen finner vi ved å evaluere systemfunksjonen på enhetsirkelen, altså for
+</p>
+
+<p class="doc-eq">\[
+z=e^{j\omega}
+\]</p>
+
+<p>
+  Dermed får vi sammenhengen mellom plasseringen i z-planet og responsen \(\,H(e^{j\omega})\). 
+  Når en pol eller et null flyttes, endres derfor filterets egenskaper umiddelbart. 
+  I demoen kan du legge til, flytte og slette poler og nuller, og samtidig se hvordan dette påvirker kurvene for magnitude og fase.
+</p>
+
+<p>
+  Parameteren \(g\) er filterets forsterkning. 
+  Den skalerer hele responsen opp eller ned uten å endre selve plasseringen av poler og nuller. 
+  Valget <strong>konjugatpar</strong> brukes for å sette inn komplekse røtter parvis, slik at filteret får reelle koeffisienter. 
+  Dette er viktig når vi ønsker et fysisk realiserbart system med reelle signaler.
+</p>
+
+<p>
+  Statuslinjen viser også om systemet er stabilt. 
+  For et diskret kausalt system krever stabilitet at alle polene ligger innenfor enhetsirkelen:
+</p>
+
+<p class="doc-eq">\[
+|p_m|<1
+\]</p>
+
+<p>
+  Demoen gir dermed en visuell og intuitiv kobling mellom z-plan, stabilitet, frekvensrespons og filterdesign. 
+  Målet er å gjøre det lettere å forstå hvordan poler og nuller bestemmer hvilke frekvenser som dempes, hvilke som forsterkes, og hvordan fasen påvirkes.
+</p>

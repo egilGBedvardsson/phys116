@@ -1,0 +1,24 @@
+<p>
+  Denne demoen viser hvordan et signal med frekvens som varierer over tid kan samples, rekonstrueres og analyseres i både tidsdomenet og frekvensdomenet. 
+  Signalet som brukes er en <em>chirp</em>, altså et signal der den momentane frekvensen endrer seg kontinuerlig gjennom tidsintervallet.
+</p>
+
+<p>
+  Parameteren \(f_s\) er samplingsfrekvensen, altså hvor mange målepunkter per sekund som brukes til å beskrive signalet. 
+  For at signalet skal kunne rekonstrueres korrekt fra målepunktene, må samplingsfrekvensen være minst dobbelt så høy som den høyeste frekvensen i signalet:
+</p>
+
+<p class="doc-eq">\[
+f_s \geq 2 f_{\max}
+\]</p>
+
+<p>
+  Dette er Nyquist-betingelsen. Hvis den er oppfylt, kan det kontinuerlige signalet i prinsippet gjenskapes fra de samplede verdiene. 
+  Når \(f_s\) er høy, tas det mange prøver av signalet, og den rekonstruerte kurven blir en god tilnærming til det opprinnelige signalet. 
+  Når \(f_s\) reduseres, blir det færre målepunkter, og det blir lettere å se hva som skjer når samplingstettheten blir for lav.
+</p>
+
+<p>
+  De svarte punktene viser de samplede måleverdiene, den svarte kurven viser det opprinnelige signalet, og den røde kurven viser signalet rekonstruert fra målepunktene ved hjelp av sinc-interpolasjon. 
+  Dette illustrerer hvordan et kontinuerlig signal kan bygges opp igjen fra diskrete prøver når samplingsbetingelsene er oppfylt.
+</p>

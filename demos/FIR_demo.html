@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FIR-filterdemo</title>
+  <link rel="stylesheet" href="../assets/design.css" />
+  <style>
+    /* Demo-specific layout; shared shell/footer/slider styles are in ../assets/design.css. */
+    :root {
+      --line: #d9d9d9;
+      --soft: #f4f4f4;
+      --text: #111111;
+    }
+
+    #page {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    #controls {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 18px 0 16px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(170px, 1fr));
+      gap: 12px 26px;
+      align-items: end;
+    }
+
+    .control {
+      min-width: 0;
+    }
+
+    select,
+    .slider {
+      width: 100%;
+    }
+
+    select {
+      height: 28px;
+      border: 1px solid #bfbfbf;
+      background: white;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 2px 6px;
+    }
+
+    #summary {
+      font-size: 15px;
+      margin: 14px 0 10px;
+      line-height: 1.35;
+    }
+
+    #output {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding-bottom: 8px;
+    }
+
+    #subplots {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid var(--line);
+      background: var(--theme-surface-bg, #ffffff);
+    }
+
+    #outputCanvas {
+      min-height: 360px;
+    }
+
+
+    @media (max-width: 1180px) {
+      #controls {
+        grid-template-columns: repeat(3, minmax(160px, 1fr));
+      }
+    }
+
+    @media (max-width: 920px) {
+      #controls {
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+      }
+
+    }
+  </style>
+</head>
+<body class="demo-page">
+  <div id="page" class="demo-shell">
+    <section id="controls">
+      <div class="control">
+        <div class="row"><label for="signalType">Signal</label><span class="value"></span></div>
+        <select id="signalType">
+          <option value="tone">Tone</option>
+          <option value="twoTone" selected>To toner</option>
+          <option value="square">Firkant</option>
+          <option value="chirp">Chirp</option>
+          <option value="impulse">Impuls</option>
+          <option value="noise">Støy</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="f1">Frekvens 1</label><span id="f1Val" class="value"></span></div>
+        <input id="f1" class="slider" type="range" min="4" max="90" step="1" value="4" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="f2">Frekvens 2</label><span id="f2Val" class="value"></span></div>
+        <input id="f2" class="slider" type="range" min="6" max="110" step="1" value="50" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="noise">Støy</label><span id="noiseVal" class="value"></span></div>
+        <input id="noise" class="slider" type="range" min="0" max="0.8" step="0.01" value="0" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="kernelLength">Kernel-lengde</label><span id="kernelLengthVal" class="value"></span></div>
+        <input id="kernelLength" class="slider" type="range" min="5" max="61" step="2" value="5" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="passes">Antall konvolusjoner</label><span id="passesVal" class="value"></span></div>
+        <input id="passes" class="slider" type="range" min="1" max="4" step="1" value="1" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="smooth">Running average</label><span id="smoothVal" class="value"></span></div>
+        <input id="smooth" class="slider" type="range" min="0" max="100" step="1" value="0" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="low">Lavpass</label><span id="lowVal" class="value"></span></div>
+        <input id="low" class="slider" type="range" min="0" max="100" step="1" value="0" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="high">Høypass</label><span id="highVal" class="value"></span></div>
+        <input id="high" class="slider" type="range" min="0" max="100" step="1" value="0" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="band">Båndpass</label><span id="bandVal" class="value"></span></div>
+        <input id="band" class="slider" type="range" min="0" max="100" step="1" value="0" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="notch">Notch-filter</label><span id="notchVal" class="value"></span></div>
+        <input id="notch" class="slider" type="range" min="0" max="100" step="1" value="0" />
+      </div>
+    </section>
+
+    <div id="summary"></div>
+
+    <section id="output">
+      <canvas id="outputCanvas" width="1200" height="360"></canvas>
+      <div id="subplots">
+        <canvas id="impulseCanvas" width="590" height="220"></canvas>
+        <canvas id="responseCanvas" width="590" height="220"></canvas>
+      </div>
+    </section>
+
+    <div id="top-banner" class="demo-footer">
+      <img class="demo-footer-logo" src="../assets/UiB_PositivEmblem.png" alt="University logo" />
+      <span>Universitetet i Bergen</span>
+      <span>PHYS 116</span>
+    </div>
+
+  </div>
+
+  <script>
+    const fs = 256;
+    const N = 256;
+
+    const controls = {
+      signalType: document.getElementById("signalType"),
+      f1: document.getElementById("f1"),
+      f2: document.getElementById("f2"),
+      noise: document.getElementById("noise"),
+      kernelLength: document.getElementById("kernelLength"),
+      passes: document.getElementById("passes"),
+      smooth: document.getElementById("smooth"),
+      low: document.getElementById("low"),
+      high: document.getElementById("high"),
+      band: document.getElementById("band"),
+      notch: document.getElementById("notch")
+    };
+
+    const readouts = {
+      f1: document.getElementById("f1Val"),
+      f2: document.getElementById("f2Val"),
+      noise: document.getElementById("noiseVal"),
+      kernelLength: document.getElementById("kernelLengthVal"),
+      passes: document.getElementById("passesVal"),
+      smooth: document.getElementById("smoothVal"),
+      low: document.getElementById("lowVal"),
+      high: document.getElementById("highVal"),
+      band: document.getElementById("bandVal"),
+      notch: document.getElementById("notchVal")
+    };
+
+    const summary = document.getElementById("summary");
+
+    const outputCanvas = document.getElementById("outputCanvas");
+    const impulseCanvas = document.getElementById("impulseCanvas");
+    const responseCanvas = document.getElementById("responseCanvas");
+
+    const outputCtx = outputCanvas.getContext("2d");
+    const impulseCtx = impulseCanvas.getContext("2d");
+    const responseCtx = responseCanvas.getContext("2d");
+    const themeSurfaceBg =
+      getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
+
+    function seededNoise(n) {
+      const x = Math.sin(n * 78.233 + 0.918) * 43758.5453;
+      return (x - Math.floor(x)) * 2 - 1;
+    }
+
+    function clamp(v, lo, hi) {
+      return Math.min(hi, Math.max(lo, v));
+    }
+
+    function sinc(x) {
+      if (Math.abs(x) < 1e-12) {
+        return 1;
+      }
+      return Math.sin(Math.PI * x) / (Math.PI * x);
+    }
+
+    function hamming(n, M) {
+      if (M <= 1) return 1;
+      return 0.54 - 0.46 * Math.cos((2 * Math.PI * n) / (M - 1));
+    }
+
+    function normalizeByPeak(h) {
+      const mag = magnitudeResponse(h, 256).mag;
+      const peak = Math.max(...mag, 1e-9);
+      return h.map(v => v / peak);
+    }
+
+    function lowpassKernel(length, cutoffCyclesPerSample) {
+      const M = length - 1;
+      const c = M / 2;
+      const h = new Array(length);
+
+      for (let n = 0; n < length; n++) {
+        const m = n - c;
+        const ideal = 2 * cutoffCyclesPerSample * sinc(2 * cutoffCyclesPerSample * m);
+        h[n] = ideal * hamming(n, length);
+      }
+
+      const sum = h.reduce((acc, v) => acc + v, 0);
+      if (Math.abs(sum) > 1e-12) {
+        for (let i = 0; i < h.length; i++) {
+          h[i] /= sum;
+        }
+      }
+      return h;
+    }
+
+    function highpassKernel(length, cutoffCyclesPerSample) {
+      const lp = lowpassKernel(length, cutoffCyclesPerSample);
+      const c = Math.floor(length / 2);
+      const hp = lp.map(v => -v);
+      hp[c] += 1;
+      return hp;
+    }
+
+    function bandpassKernel(length, lowCut, highCut) {
+      const lpHigh = lowpassKernel(length, highCut);
+      const lpLow = lowpassKernel(length, lowCut);
+      return lpHigh.map((v, i) => v - lpLow[i]);
+    }
+
+    function notchKernel(length, lowCut, highCut) {
+      const bp = bandpassKernel(length, lowCut, highCut);
+      const c = Math.floor(length / 2);
+      const notch = bp.map(v => -v);
+      notch[c] += 1;
+      return notch;
+    }
+
+    function movingAverageKernel(length) {
+      const v = 1 / length;
+      return new Array(length).fill(v);
+    }
+
+    function identityKernel(length) {
+      const out = new Array(length).fill(0);
+      out[Math.floor(length / 2)] = 1;
+      return out;
+    }
+
+    function blendKernel(baseKernel, strength01) {
+      const id = identityKernel(baseKernel.length);
+      return baseKernel.map((v, i) => (1 - strength01) * id[i] + strength01 * v);
+    }
+
+    function convolve(a, b) {
+      const out = new Array(a.length + b.length - 1).fill(0);
+      for (let i = 0; i < a.length; i++) {
+        for (let j = 0; j < b.length; j++) {
+          out[i + j] += a[i] * b[j];
+        }
+      }
+      return out;
+    }
+
+    function convolveSame(x, h) {
+      const full = convolve(x, h);
+      const start = Math.floor((h.length - 1) / 2);
+      return full.slice(start, start + x.length);
+    }
+
+    function magnitudeResponse(h, bins) {
+      const mag = [];
+      const freq = [];
+
+      for (let i = 0; i < bins; i++) {
+        const w = (Math.PI * i) / (bins - 1);
+        let re = 0;
+        let im = 0;
+        for (let n = 0; n < h.length; n++) {
+          re += h[n] * Math.cos(w * n);
+          im -= h[n] * Math.sin(w * n);
+        }
+        mag.push(Math.sqrt(re * re + im * im));
+        freq.push((i / (bins - 1)) * (fs / 2));
+      }
+      return { mag, freq };
+    }
+
+    function generateSignal() {
+      const f1 = Number(controls.f1.value);
+      const f2 = Number(controls.f2.value);
+      const noiseLevel = Number(controls.noise.value);
+      const T = N / fs;
+      const signal = new Array(N);
+
+      for (let n = 0; n < N; n++) {
+        const t = n / fs;
+        let x = 0;
+
+        switch (controls.signalType.value) {
+          case "tone":
+            x = Math.sin(2 * Math.PI * f1 * t);
+            break;
+          case "twoTone":
+            x = 0.7 * Math.sin(2 * Math.PI * f1 * t) + 0.55 * Math.sin(2 * Math.PI * f2 * t);
+            break;
+          case "square":
+            x = Math.sign(Math.sin(2 * Math.PI * f1 * t));
+            break;
+          case "chirp":
+            x = Math.sin(2 * Math.PI * (f1 * t + ((f2 - f1) * t * t) / (2 * T)));
+            break;
+          case "impulse":
+            x = n === Math.floor(N / 4) ? 1 : 0;
+            break;
+          case "noise":
+            x = seededNoise(n);
+            break;
+        }
+
+        signal[n] = x + noiseLevel * seededNoise(n + 900);
+      }
+
+      return signal;
+    }
+
+    function buildCombinedKernel() {
+      const length = Number(controls.kernelLength.value);
+      const passes = Number(controls.passes.value);
+
+      const sSmooth = Number(controls.smooth.value) / 100;
+      const sLow = Number(controls.low.value) / 100;
+      const sHigh = Number(controls.high.value) / 100;
+      const sBand = Number(controls.band.value) / 100;
+      const sNotch = Number(controls.notch.value) / 100;
+
+      const f1 = Number(controls.f1.value);
+      const f2 = Number(controls.f2.value);
+      const minF = Math.min(f1, f2);
+      const maxF = Math.max(f1, f2);
+
+      const bpLow = clamp((minF - 8) / fs, 0.02, 0.35);
+      const bpHigh = clamp((maxF + 8) / fs, bpLow + 0.03, 0.48);
+
+      const notchCenter = clamp(f2 / fs, 0.04, 0.46);
+      const notchHalfWidth = 0.018;
+      const notchLow = clamp(notchCenter - notchHalfWidth, 0.01, 0.46);
+      const notchHigh = clamp(notchCenter + notchHalfWidth, notchLow + 0.01, 0.49);
+
+      const chain = [];
+
+      if (sSmooth > 0) {
+        chain.push(blendKernel(movingAverageKernel(length), sSmooth));
+      }
+      if (sLow > 0) {
+        chain.push(blendKernel(lowpassKernel(length, 0.12), sLow));
+      }
+      if (sHigh > 0) {
+        chain.push(blendKernel(highpassKernel(length, 0.16), sHigh));
+      }
+      if (sBand > 0) {
+        chain.push(blendKernel(bandpassKernel(length, bpLow, bpHigh), sBand));
+      }
+      if (sNotch > 0) {
+        chain.push(blendKernel(notchKernel(length, notchLow, notchHigh), sNotch));
+      }
+
+      let singlePass = [1];
+      for (const k of chain) {
+        singlePass = convolve(singlePass, k);
+      }
+
+      singlePass = normalizeByPeak(singlePass);
+
+      let total = [1];
+      for (let i = 0; i < passes; i++) {
+        total = convolve(total, singlePass);
+      }
+
+      total = normalizeByPeak(total);
+
+      return {
+        singlePass,
+        total,
+        activeFilters: chain.length,
+        notchCenterHz: notchCenter * fs,
+        bandLowHz: bpLow * fs,
+        bandHighHz: bpHigh * fs
+      };
+    }
+
+    function clearCanvas(ctx, canvas) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = themeSurfaceBg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawGrid(ctx, canvas) {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.strokeStyle = "#ececec";
+      ctx.lineWidth = 1;
+
+      for (let i = 1; i < 4; i++) {
+        const y = (h * i) / 4;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      for (let i = 1; i < 5; i++) {
+        const x = (w * i) / 5;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+    }
+
+    function sincInterpolate(samples, outCount, radius = 14) {
+      const maxIdx = samples.length - 1;
+      const out = new Array(outCount);
+
+      for (let i = 0; i < outCount; i++) {
+        const x = (i / Math.max(1, outCount - 1)) * maxIdx;
+        const center = Math.floor(x);
+        const kMin = Math.max(0, center - radius);
+        const kMax = Math.min(maxIdx, center + radius);
+
+        let acc = 0;
+        let wsum = 0;
+
+        for (let k = kMin; k <= kMax; k++) {
+          const d = x - k;
+          const ad = Math.abs(d);
+          if (ad >= radius) continue;
+
+          // Windowed sinc (Lanczos form) for stable, smooth reconstruction.
+          const w = sinc(d) * sinc(d / radius);
+          acc += samples[k] * w;
+          wsum += w;
+        }
+
+        out[i] = wsum !== 0 ? acc / wsum : samples[center];
+      }
+
+      return out;
+    }
+
+    function drawMainPlot(input, output) {
+      clearCanvas(outputCtx, outputCanvas);
+      drawGrid(outputCtx, outputCanvas);
+
+      const w = outputCanvas.width;
+      const h = outputCanvas.height;
+      const denseCount = Math.max(w, input.length);
+      const inputSmooth = sincInterpolate(input, denseCount);
+      const outputSmooth = sincInterpolate(output, denseCount);
+
+      const maxAbs = Math.max(
+        1e-6,
+        ...inputSmooth.map(Math.abs),
+        ...outputSmooth.map(Math.abs)
+      );
+
+      function mapX(i, len) {
+        return (i / Math.max(1, len - 1)) * w;
+      }
+
+      function mapY(v) {
+        return h / 2 - (v / maxAbs) * (h * 0.42);
+      }
+
+      outputCtx.lineWidth = 1.5;
+      outputCtx.strokeStyle = "#b4b4b4";
+      outputCtx.beginPath();
+      for (let i = 0; i < inputSmooth.length; i++) {
+        const x = mapX(i, inputSmooth.length);
+        const y = mapY(inputSmooth[i]);
+        if (i === 0) outputCtx.moveTo(x, y);
+        else outputCtx.lineTo(x, y);
+      }
+      outputCtx.stroke();
+
+      outputCtx.lineWidth = 2;
+      outputCtx.strokeStyle = "#111";
+      outputCtx.beginPath();
+      for (let i = 0; i < outputSmooth.length; i++) {
+        const x = mapX(i, outputSmooth.length);
+        const y = mapY(outputSmooth[i]);
+        if (i === 0) outputCtx.moveTo(x, y);
+        else outputCtx.lineTo(x, y);
+      }
+      outputCtx.stroke();
+
+      outputCtx.fillStyle = "#111";
+      outputCtx.font = "16px Times New Roman";
+      outputCtx.fillText("Inngang x[n] (grå) + utgang y[n] (svart)", 14, 24);
+
+      outputCtx.fillStyle = "#666";
+      outputCtx.font = "14px Times New Roman";
+      outputCtx.fillText("n", w - 16, h - 10);
+    }
+
+    function drawImpulse(kernel) {
+      clearCanvas(impulseCtx, impulseCanvas);
+      drawGrid(impulseCtx, impulseCanvas);
+
+      const w = impulseCanvas.width;
+      const h = impulseCanvas.height;
+      const maxAbs = Math.max(1e-6, ...kernel.map(Math.abs));
+
+      impulseCtx.strokeStyle = "#111";
+      impulseCtx.lineWidth = 1.4;
+      impulseCtx.beginPath();
+
+      for (let i = 0; i < kernel.length; i++) {
+        const x = (i / Math.max(1, kernel.length - 1)) * w;
+        const y = h / 2 - (kernel[i] / maxAbs) * (h * 0.42);
+        if (i === 0) impulseCtx.moveTo(x, y);
+        else impulseCtx.lineTo(x, y);
+      }
+      impulseCtx.stroke();
+
+      impulseCtx.fillStyle = "#111";
+      impulseCtx.font = "15px Times New Roman";
+      impulseCtx.fillText("Kombinert impulsrespons h[n]", 12, 22);
+    }
+
+    function drawResponse(kernel) {
+      clearCanvas(responseCtx, responseCanvas);
+      drawGrid(responseCtx, responseCanvas);
+
+      const { mag, freq } = magnitudeResponse(kernel, 260);
+      const db = mag.map(v => 20 * Math.log10(v + 1e-8));
+      const minDb = -60;
+      const maxDb = 6;
+
+      const w = responseCanvas.width;
+      const h = responseCanvas.height;
+
+      responseCtx.strokeStyle = "#111";
+      responseCtx.lineWidth = 1.7;
+      responseCtx.beginPath();
+
+      for (let i = 0; i < db.length; i++) {
+        const x = (i / (db.length - 1)) * w;
+        const clamped = clamp(db[i], minDb, maxDb);
+        const y = h - ((clamped - minDb) / (maxDb - minDb)) * (h - 20) - 10;
+        if (i === 0) responseCtx.moveTo(x, y);
+        else responseCtx.lineTo(x, y);
+      }
+      responseCtx.stroke();
+
+      responseCtx.fillStyle = "#111";
+      responseCtx.font = "15px Times New Roman";
+      responseCtx.fillText("|H(f)| i dB", 12, 22);
+
+      responseCtx.fillStyle = "#666";
+      responseCtx.font = "13px Times New Roman";
+      responseCtx.fillText("0 Hz", 8, h - 8);
+      responseCtx.fillText(`${Math.round(freq[freq.length - 1])} Hz`, w - 48, h - 8);
+    }
+
+    function updateReadouts() {
+      readouts.f1.textContent = `${controls.f1.value} Hz`;
+      readouts.f2.textContent = `${controls.f2.value} Hz`;
+      readouts.noise.textContent = Number(controls.noise.value).toFixed(2);
+      readouts.kernelLength.textContent = controls.kernelLength.value;
+      readouts.passes.textContent = controls.passes.value;
+      readouts.smooth.textContent = `${controls.smooth.value}%`;
+      readouts.low.textContent = `${controls.low.value}%`;
+      readouts.high.textContent = `${controls.high.value}%`;
+      readouts.band.textContent = `${controls.band.value}%`;
+      readouts.notch.textContent = `${controls.notch.value}%`;
+    }
+
+    function refresh() {
+      updateReadouts();
+
+      const x = generateSignal();
+      const filterState = buildCombinedKernel();
+      const y = convolveSame(x, filterState.total);
+
+      drawMainPlot(x, y);
+      drawImpulse(filterState.total);
+      drawResponse(filterState.total);
+
+      summary.textContent =
+        `Aktive filterblokker: ${filterState.activeFilters} | Kombinerte koeffisienter: ${filterState.total.length} | ` +
+        `Båndpassvindu: ${filterState.bandLowHz.toFixed(1)}-${filterState.bandHighHz.toFixed(1)} Hz | ` +
+        `Notch-senter: ${filterState.notchCenterHz.toFixed(1)} Hz`;
+    }
+
+    Object.values(controls).forEach(el => {
+      el.addEventListener("input", refresh);
+      el.addEventListener("change", refresh);
+    });
+
+    refresh();
+  </script>
+</body>
+</html>

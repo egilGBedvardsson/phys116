@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<title>Firkantsignal og konjugatsymmetri</title>
+<link rel="stylesheet" href="../assets/design.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+/* Demo-specific layout; shared shell/footer/slider styles are in ../assets/design.css. */
+:root {
+  --line: #d9d9d9;
+  --text: #111111;
+}
+
+#container {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+#controls {
+  width: 100%;
+  padding: 18px 0 16px;
+  box-sizing: border-box;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(170px, 1fr));
+  gap: 12px 26px;
+  align-items: end;
+}
+
+.control-group {
+  min-width: 0;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#plot {
+  width: 100%;
+  min-height: 620px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  background: var(--theme-surface-bg, #ffffff);
+}
+h2 {
+  margin: 10px;
+}
+@media (max-width: 920px) {
+  #controls {
+    column-gap: 20px;
+  }
+}
+</style>
+</head>
+
+<body class="demo-page">
+
+<div id="container" class="demo-shell">
+<div id="top-banner" class="demo-footer">
+  <img
+    class="demo-footer-logo"
+    src="../assets/UiB_PositivEmblem.png"
+    alt="University logo"
+  />
+  <span>Universitetet i Bergen</span>
+  <span>PHYS 116</span>
+</div>
+
+  <div id="controls">
+    <div class="control-group">
+      <div class="row"><label for="phiSlider">\(\phi\)</label><span id="phiVal" class="value"></span></div>
+      <input type="range" min="-3.14" max="3.14" step="0.05" value="0" id="phiSlider" class="slider">
+    </div>
+
+    <div class="control-group">
+      <div class="row"><label for="nSlider">\(N\)</label><span id="nVal" class="value"></span></div>
+      <input type="range" min="1" max="40" step="1" value="15" id="nSlider" class="slider">
+    </div>
+  </div>
+
+  <div id="plot"></div>
+</div>
+
+<script>
+const T = 1.0;
+const f0 = 3;
+const w0 = 2 * Math.PI * f0;
+const themeSurfaceBg =
+  getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
+const phiValEl = document.getElementById("phiVal");
+const nValEl = document.getElementById("nVal");
+
+// time axis
+const t = Array.from({length: 4000}, (_, i) => i * T / 4000);
+
+function compute(phi, N) {
+    let ideal_real = new Array(t.length).fill(0);
+    let broken_real = new Array(t.length).fill(0);
+    let broken_imag = new Array(t.length).fill(0);
+
+    for (let k = 1; k < 2*N; k += 2) {
+        let c_pos_re = 0;
+        let c_pos_im = -2/(Math.PI*k);
+
+        let c_neg_re = 0;
+        let c_neg_im = 2/(Math.PI*k);
+
+        for (let i = 0; i < t.length; i++) {
+            let wt = k*w0*t[i];
+
+            // ideal
+            let cos1 = Math.cos(wt);
+            let sin1 = Math.sin(wt);
+
+            let cos2 = Math.cos(-wt);
+            let sin2 = Math.sin(-wt);
+
+            ideal_real[i] += -c_pos_im * sin1 + -c_neg_im * sin2;
+
+            // broken (phase shift)
+            let wt_phi = wt + k*phi;
+            let cos1b = Math.cos(wt_phi);
+            let sin1b = Math.sin(wt_phi);
+
+            let real_part = -c_pos_im * sin1b + -c_neg_im * sin2;
+            let imag_part = c_pos_im * cos1b + c_neg_im * cos2;
+
+            broken_real[i] += real_part;
+            broken_imag[i] += imag_part;
+        }
+    }
+
+    return {ideal_real, broken_real, broken_imag};
+}
+
+function update() {
+    let phi = parseFloat(document.getElementById("phiSlider").value);
+    let N = parseInt(document.getElementById("nSlider").value);
+    phiValEl.textContent = `${phi.toFixed(2)} rad`;
+    nValEl.textContent = `${N}`;
+
+    let data = compute(phi, N);
+
+    let traces = [
+        {
+            x: t,
+            y: data.ideal_real,
+            name: "Ideell (symmetrisk konjugering)",
+            line: {color: "black", dash: "dash"}
+        },
+        {
+            x: t,
+            y: data.broken_real,
+            name: "Brutt par (Reell del)",
+            line: {color: "red"}
+        },
+        {
+            x: t,
+            y: data.broken_imag,
+            name: "Imaginær lekkasje",
+            line: {color: "blue"},
+            xaxis: "x",
+            yaxis: "y2"
+        }
+    ];
+
+  let layout = {
+      font: {family: "Times New Roman, Times, serif", size: 16},
+      paper_bgcolor: themeSurfaceBg,
+      plot_bgcolor: themeSurfaceBg,
+      height: 620,
+      margin: {l: 0, r: 0, t: 58, b: 10},
+      legend: {
+          orientation: "h",
+          x: 0,
+          xanchor: "left",
+          y: 1.08,
+          yanchor: "bottom",
+          font: {size: 14},
+          entrywidthmode: "fraction",
+          entrywidth: 0.32
+      },
+
+      yaxis: {
+          title: {text: "Reell del", font: {size: 16}},
+          tickfont: {size: 16},
+          range: [-1.5, 1.5],
+          domain: [0.55, 0.98],
+          automargin: true
+      },
+
+      yaxis2: {
+          title: {text: "Imaginær del", font: {size: 16}},
+          tickfont: {size: 16},
+          range: [-2, 2],
+          domain: [0.02, 0.45],
+          automargin: true
+      },
+
+      xaxis: {showticklabels: false, tickfont: {size: 16}},
+      xaxis2: {
+          title: {text: "Tid (s)", font: {size: 22}},
+          tickfont: {size: 16},
+          automargin: true
+      }
+  };
+
+    Plotly.newPlot('plot', traces, layout);
+}
+
+document.getElementById("phiSlider").oninput = update;
+document.getElementById("nSlider").oninput = update;
+
+update();
+</script>
+
+</body>
+</html>

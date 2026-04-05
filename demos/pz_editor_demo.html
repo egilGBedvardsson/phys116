@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="../assets/design.css" />
+<style>
+  /* Demo-specific layout; shared shell/footer styles are in ../assets/design.css. */
+  #page {
+    box-sizing: border-box;
+  }
+
+  #controls {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+    align-items: end;
+    border-bottom: 1px solid #ddd;
+    padding: 8px 0 12px;
+    margin-bottom: 10px;
+  }
+
+  .control {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+  }
+
+  .control label {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  select,
+  input[type="number"],
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    height: 32px;
+    box-sizing: border-box;
+    line-height: 1.2;
+    border: 1px solid #bfbfbf;
+    background: #fff;
+    padding: 4px 8px;
+  }
+
+  input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #f5f5f5;
+  }
+
+  .check-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: 400;
+    padding-left: 0;
+  }
+
+  .check-wrap input {
+    margin: 0;
+  }
+
+  .control-conjugate {
+    padding-left: 14px;
+  }
+
+  .control-conjugate .check-wrap {
+    padding-left: 6px;
+  }
+
+  #status {
+    font-size: 14px;
+    margin: 0 0 10px;
+    line-height: 1.35;
+  }
+
+  #layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.95fr) minmax(420px, 1.05fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .panel {
+    border: 1px solid #ddd;
+    background: var(--theme-surface-bg, #ffffff);
+    padding: 8px;
+    box-sizing: border-box;
+  }
+
+  .panel h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  #pzCanvas {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: block;
+    cursor: crosshair;
+    touch-action: none;
+    background: var(--theme-surface-bg, #ffffff);
+  }
+
+  #plots {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .plot-wrap {
+    border: 1px solid #ddd;
+    background: var(--theme-surface-bg, #ffffff);
+    padding: 6px;
+  }
+
+  .plot-wrap h4 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .plot-canvas {
+    width: 100%;
+    height: 220px;
+    display: block;
+    background: var(--theme-surface-bg, #ffffff);
+  }
+
+  @media (max-width: 860px) {
+    #controls {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    #layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 700px) {
+    #controls {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+</head>
+<body class="demo-page">
+  <div id="page" class="demo-shell">
+    <section id="controls">
+      <div class="control">
+        <label for="modeSelect">Verktøy</label>
+        <select id="modeSelect">
+          <option value="add-zero">Legg til null</option>
+          <option value="add-pole">Legg til pol</option>
+          <option value="move">Flytt punkt</option>
+          <option value="delete">Slett punkt</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <label for="gainInput">Forsterkning g</label>
+        <input id="gainInput" type="number" step="0.1" value="1" />
+      </div>
+
+      <div class="control control-conjugate">
+        <label>Konjugatpar</label>
+        <label class="check-wrap">
+          <input id="conjToggle" type="checkbox" checked />
+          Auto-par ved innsetting
+        </label>
+      </div>
+
+      <div class="control">
+        <label>Operasjoner</label>
+        <button id="removeSelectedBtn" type="button">Fjern valgt</button>
+      </div>
+
+      <div class="control">
+        <label>Preset</label>
+        <button id="presetLowBtn" type="button">Lavpass-eksempel</button>
+      </div>
+
+      <div class="control">
+        <label>Reset</label>
+        <button id="clearBtn" type="button">Tøm alle poler/nuller</button>
+      </div>
+    </section>
+
+    <p id="status"></p>
+
+    <section id="layout">
+      <article class="panel">
+        <h3>Pol-null-diagram i z-planet</h3>
+        <canvas id="pzCanvas"></canvas>
+      </article>
+
+      <article id="plots">
+        <section class="plot-wrap">
+          <h4>Magnituderespons |H(e<sup>jω</sup>)| i dB</h4>
+          <canvas id="magCanvas" class="plot-canvas"></canvas>
+        </section>
+        <section class="plot-wrap">
+          <h4>Faserespons ∠H(e<sup>jω</sup>) i rad</h4>
+          <canvas id="phaseCanvas" class="plot-canvas"></canvas>
+        </section>
+      </article>
+    </section>
+
+    <div id="top-banner" class="demo-footer">
+      <img class="demo-footer-logo" src="../assets/UiB_PositivEmblem.png" alt="University logo" />
+      <span>Universitetet i Bergen</span>
+      <span>PHYS 116</span>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const MAX_ABS = 1.4;
+  const EPS = 1e-9;
+
+  const modeSelect = document.getElementById("modeSelect");
+  const gainInput = document.getElementById("gainInput");
+  const conjToggle = document.getElementById("conjToggle");
+  const removeSelectedBtn = document.getElementById("removeSelectedBtn");
+  const presetLowBtn = document.getElementById("presetLowBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const statusEl = document.getElementById("status");
+
+  const pzCanvas = document.getElementById("pzCanvas");
+  const magCanvas = document.getElementById("magCanvas");
+  const phaseCanvas = document.getElementById("phaseCanvas");
+
+  const state = {
+    zeros: [],
+    poles: [],
+    mode: "add-zero",
+    gain: 1,
+    addConjugate: true,
+    selected: null,
+    dragging: false,
+    nextId: 1,
+    nextPair: 1
+  };
+
+  function c(re, im) {
+    return { re, im };
+  }
+
+  function cSub(a, b) {
+    return c(a.re - b.re, a.im - b.im);
+  }
+
+  function cMul(a, b) {
+    return c(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
+  }
+
+  function cDiv(a, b) {
+    const den = b.re * b.re + b.im * b.im;
+    if (den < EPS) return c(1e6, 0);
+    return c((a.re * b.re + a.im * b.im) / den, (a.im * b.re - a.re * b.im) / den);
+  }
+
+  function cAbs(a) {
+    return Math.hypot(a.re, a.im);
+  }
+
+  function cArg(a) {
+    return Math.atan2(a.im, a.re);
+  }
+
+  function clamp(v, lo, hi) {
+    return Math.max(lo, Math.min(hi, v));
+  }
+
+  function prepareCanvas(canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, w: rect.width, h: rect.height };
+  }
+
+  function toScreen(point, w, h) {
+    const x = ((point.re + MAX_ABS) / (2 * MAX_ABS)) * w;
+    const y = ((MAX_ABS - point.im) / (2 * MAX_ABS)) * h;
+    return { x, y };
+  }
+
+  function toComplex(x, y, w, h) {
+    const re = (x / w) * (2 * MAX_ABS) - MAX_ABS;
+    const im = MAX_ABS - (y / h) * (2 * MAX_ABS);
+    return c(clamp(re, -MAX_ABS, MAX_ABS), clamp(im, -MAX_ABS, MAX_ABS));
+  }
+
+  function pointsOf(type) {
+    return type === "zero" ? state.zeros : state.poles;
+  }
+
+  function findPoint(type, id) {
+    return pointsOf(type).find(p => p.id === id) || null;
+  }
+
+  function removePointById(type, id) {
+    const arr = pointsOf(type);
+    const idx = arr.findIndex(p => p.id === id);
+    if (idx < 0) return;
+
+    const point = arr[idx];
+    if (point.pair !== null) {
+      for (let i = arr.length - 1; i >= 0; i--) {
+        if (arr[i].pair === point.pair) arr.splice(i, 1);
+      }
+    } else {
+      arr.splice(idx, 1);
+    }
+
+    if (state.selected && state.selected.type === type && state.selected.id === id) {
+      state.selected = null;
+    }
+  }
+
+  function addPoint(type, re, im) {
+    const arr = pointsOf(type);
+    const point = {
+      id: state.nextId++,
+      re,
+      im,
+      pair: null
+    };
+
+    if (state.addConjugate && Math.abs(im) > 0.01) {
+      const pairId = state.nextPair++;
+      point.pair = pairId;
+      arr.push(point);
+      arr.push({ id: state.nextId++, re, im: -im, pair: pairId });
+    } else {
+      point.im = Math.abs(point.im) < 0.01 ? 0 : point.im;
+      arr.push(point);
+    }
+
+    state.selected = { type, id: point.id };
+  }
+
+  function getCanvasPos(ev, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: ev.clientX - rect.left, y: ev.clientY - rect.top, w: rect.width, h: rect.height };
+  }
+
+  function pickPoint(x, y, w, h) {
+    const threshold = 11;
+    let best = null;
+
+    function test(arr, type) {
+      for (const p of arr) {
+        const sp = toScreen(p, w, h);
+        const d = Math.hypot(sp.x - x, sp.y - y);
+        if (d <= threshold && (!best || d < best.d)) {
+          best = { type, id: p.id, d };
+        }
+      }
+    }
+
+    test(state.zeros, "zero");
+    test(state.poles, "pole");
+    return best;
+  }
+
+  function moveSelectedPoint(re, im) {
+    if (!state.selected) return;
+    const p = findPoint(state.selected.type, state.selected.id);
+    if (!p) return;
+
+    p.re = clamp(re, -MAX_ABS, MAX_ABS);
+    p.im = clamp(Math.abs(im) < 0.01 ? 0 : im, -MAX_ABS, MAX_ABS);
+
+    if (p.pair !== null) {
+      const arr = pointsOf(state.selected.type);
+      const mate = arr.find(other => other.pair === p.pair && other.id !== p.id);
+      if (mate) {
+        if (Math.abs(p.im) < 0.01) {
+          // collapse pair on real axis
+          p.pair = null;
+          const rm = arr.findIndex(other => other.id === mate.id);
+          if (rm >= 0) arr.splice(rm, 1);
+        } else {
+          mate.re = p.re;
+          mate.im = -p.im;
+        }
+      }
+    }
+  }
+
+  function drawPZPlane() {
+    const { ctx, w, h } = prepareCanvas(pzCanvas);
+    ctx.clearRect(0, 0, w, h);
+
+    const gridVals = [-1, -0.5, 0, 0.5, 1];
+
+    ctx.strokeStyle = "#e4e4e4";
+    ctx.lineWidth = 1;
+    for (const v of gridVals) {
+      const x = toScreen(c(v, 0), w, h).x;
+      const y = toScreen(c(0, v), w, h).y;
+
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = "#b8b8b8";
+    ctx.lineWidth = 1.6;
+    const center = toScreen(c(0, 0), w, h);
+    const r = (1 / (2 * MAX_ABS)) * w;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#555";
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(0, center.y);
+    ctx.lineTo(w, center.y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(center.x, 0);
+    ctx.lineTo(center.x, h);
+    ctx.stroke();
+
+    ctx.fillStyle = "#444";
+    ctx.font = '12px "Times New Roman", Times, serif';
+    ctx.fillText("Re{z}", w - 34, center.y - 6);
+    ctx.fillText("Im{z}", center.x + 6, 14);
+
+    function drawZero(p, selected) {
+      const sp = toScreen(p, w, h);
+      ctx.lineWidth = selected ? 3 : 2;
+      ctx.strokeStyle = selected ? "#0a84ff" : "#111";
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y, 7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    function drawPole(p, selected) {
+      const sp = toScreen(p, w, h);
+      const s = 7;
+      ctx.lineWidth = selected ? 3 : 2.2;
+      ctx.strokeStyle = selected ? "#0a84ff" : "#8b0000";
+      ctx.beginPath();
+      ctx.moveTo(sp.x - s, sp.y - s);
+      ctx.lineTo(sp.x + s, sp.y + s);
+      ctx.moveTo(sp.x + s, sp.y - s);
+      ctx.lineTo(sp.x - s, sp.y + s);
+      ctx.stroke();
+    }
+
+    for (const z of state.zeros) {
+      const selected = state.selected && state.selected.type === "zero" && state.selected.id === z.id;
+      drawZero(z, selected);
+    }
+
+    for (const p of state.poles) {
+      const selected = state.selected && state.selected.type === "pole" && state.selected.id === p.id;
+      drawPole(p, selected);
+    }
+
+    ctx.fillStyle = "#666";
+    ctx.font = '13px "Times New Roman", Times, serif';
+    ctx.fillText("Klikk for å legge til. Dra for flytting.", 10, h - 12);
+  }
+
+  function evaluateResponse() {
+    const N = 520;
+    const w = new Array(N + 1);
+    const magDb = new Array(N + 1);
+    const phase = new Array(N + 1);
+
+    for (let i = 0; i <= N; i++) {
+      const wi = (Math.PI * i) / N;
+      const z = c(Math.cos(wi), Math.sin(wi));
+
+      let num = c(state.gain, 0);
+      for (const z0 of state.zeros) {
+        num = cMul(num, cSub(z, z0));
+      }
+
+      let den = c(1, 0);
+      for (const p0 of state.poles) {
+        den = cMul(den, cSub(z, p0));
+      }
+
+      const h = cDiv(num, den);
+      w[i] = wi;
+      magDb[i] = 20 * Math.log10(cAbs(h) + 1e-6);
+      phase[i] = cArg(h);
+    }
+
+    for (let i = 1; i < phase.length; i++) {
+      let dp = phase[i] - phase[i - 1];
+      while (dp > Math.PI) {
+        phase[i] -= 2 * Math.PI;
+        dp -= 2 * Math.PI;
+      }
+      while (dp < -Math.PI) {
+        phase[i] += 2 * Math.PI;
+        dp += 2 * Math.PI;
+      }
+    }
+
+    return { w, magDb, phase };
+  }
+
+  function drawCurvePlot(canvas, dataX, dataY, opts) {
+    const { ctx, w, h } = prepareCanvas(canvas);
+    const left = 50;
+    const right = 10;
+    const top = 14;
+    const bottom = 28;
+    const pw = w - left - right;
+    const ph = h - top - bottom;
+
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.strokeStyle = "#e3e3e3";
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = top + (i / 4) * ph;
+      ctx.beginPath();
+      ctx.moveTo(left, y);
+      ctx.lineTo(left + pw, y);
+      ctx.stroke();
+    }
+    for (let i = 0; i <= 4; i++) {
+      const x = left + (i / 4) * pw;
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, top + ph);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = "#666";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left, top + ph);
+    ctx.lineTo(left + pw, top + ph);
+    ctx.stroke();
+
+    const xMin = 0;
+    const xMax = Math.PI;
+    const yMin = opts.yMin;
+    const yMax = opts.yMax;
+
+    function sx(x) {
+      return left + ((x - xMin) / (xMax - xMin)) * pw;
+    }
+
+    function sy(y) {
+      return top + ((yMax - y) / (yMax - yMin)) * ph;
+    }
+
+    ctx.strokeStyle = opts.color;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    for (let i = 0; i < dataX.length; i++) {
+      const x = sx(dataX[i]);
+      const y = sy(dataY[i]);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = "#444";
+    ctx.font = '12px "Times New Roman", Times, serif';
+
+    for (let i = 0; i <= 4; i++) {
+      const xv = (Math.PI * i) / 4;
+      const x = sx(xv);
+      let lab = "";
+      if (i === 0) lab = "0";
+      else if (i === 4) lab = "π";
+      else if (i === 2) lab = "π/2";
+      else lab = `${i}π/4`;
+      ctx.fillText(lab, x - 10, top + ph + 18);
+    }
+
+    for (let i = 0; i <= 4; i++) {
+      const yv = yMin + ((4 - i) / 4) * (yMax - yMin);
+      const y = sy(yv);
+      ctx.fillText(yv.toFixed(1), 4, y + 4);
+    }
+  }
+
+  function drawResponses() {
+    const resp = evaluateResponse();
+
+    const magLo = -60;
+    const magHi = 24;
+    const phaseMin = Math.min(...resp.phase);
+    const phaseMax = Math.max(...resp.phase);
+    const phasePad = 0.2;
+
+    drawCurvePlot(magCanvas, resp.w, resp.magDb.map(v => clamp(v, magLo, magHi)), {
+      yMin: magLo,
+      yMax: magHi,
+      color: "#111"
+    });
+
+    drawCurvePlot(phaseCanvas, resp.w, resp.phase, {
+      yMin: phaseMin - phasePad,
+      yMax: phaseMax + phasePad,
+      color: "#8b0000"
+    });
+  }
+
+  function updateStatus() {
+    const maxPoleR = state.poles.reduce((m, p) => Math.max(m, cAbs(p)), 0);
+    const stable = maxPoleR < 1;
+    const selectedText = state.selected
+      ? `Valgt: ${state.selected.type === "zero" ? "null" : "pol"} #${state.selected.id}`
+      : "Valgt: ingen";
+
+    statusEl.innerHTML =
+      `Nuller: <b>${state.zeros.length}</b> &nbsp;|&nbsp; ` +
+      `Poler: <b>${state.poles.length}</b> &nbsp;|&nbsp; ` +
+      `Maks |pol|: <b>${maxPoleR.toFixed(3)}</b> &nbsp;|&nbsp; ` +
+      `Stabilitet: <b>${stable ? "Stabil (alle poler innenfor enhetsirkelen)" : "Ustabil / marginal"}</b> &nbsp;|&nbsp; ` +
+      selectedText;
+  }
+
+  function redrawAll() {
+    drawPZPlane();
+    drawResponses();
+    updateStatus();
+  }
+
+  function loadLowPassPreset() {
+    state.zeros = [
+      { id: state.nextId++, re: -1, im: 0, pair: null },
+      { id: state.nextId++, re: -1, im: 0, pair: null }
+    ];
+
+    const pair1 = state.nextPair++;
+    const pair2 = state.nextPair++;
+    state.poles = [
+      { id: state.nextId++, re: 0.74, im: 0.28, pair: pair1 },
+      { id: state.nextId++, re: 0.74, im: -0.28, pair: pair1 },
+      { id: state.nextId++, re: 0.58, im: 0.12, pair: pair2 },
+      { id: state.nextId++, re: 0.58, im: -0.12, pair: pair2 }
+    ];
+
+    state.selected = null;
+    redrawAll();
+  }
+
+  modeSelect.addEventListener("change", () => {
+    state.mode = modeSelect.value;
+    pzCanvas.style.cursor = state.mode === "delete" ? "not-allowed" : "crosshair";
+  });
+
+  gainInput.addEventListener("input", () => {
+    const v = Number(gainInput.value);
+    state.gain = Number.isFinite(v) ? v : 1;
+    redrawAll();
+  });
+
+  conjToggle.addEventListener("change", () => {
+    state.addConjugate = conjToggle.checked;
+  });
+
+  removeSelectedBtn.addEventListener("click", () => {
+    if (!state.selected) return;
+    removePointById(state.selected.type, state.selected.id);
+    state.selected = null;
+    redrawAll();
+  });
+
+  presetLowBtn.addEventListener("click", loadLowPassPreset);
+
+  clearBtn.addEventListener("click", () => {
+    state.zeros = [];
+    state.poles = [];
+    state.selected = null;
+    redrawAll();
+  });
+
+  pzCanvas.addEventListener("pointerdown", ev => {
+    const pos = getCanvasPos(ev, pzCanvas);
+    const hit = pickPoint(pos.x, pos.y, pos.w, pos.h);
+
+    if (state.mode === "delete") {
+      if (hit) {
+        removePointById(hit.type, hit.id);
+        state.selected = null;
+        redrawAll();
+      }
+      return;
+    }
+
+    if (hit) {
+      state.selected = { type: hit.type, id: hit.id };
+      state.dragging = true;
+      pzCanvas.setPointerCapture(ev.pointerId);
+      redrawAll();
+      return;
+    }
+
+    if (state.mode === "move") {
+      state.selected = null;
+      redrawAll();
+      return;
+    }
+
+    const z = toComplex(pos.x, pos.y, pos.w, pos.h);
+    if (state.mode === "add-zero") addPoint("zero", z.re, z.im);
+    if (state.mode === "add-pole") addPoint("pole", z.re, z.im);
+
+    redrawAll();
+  });
+
+  pzCanvas.addEventListener("pointermove", ev => {
+    if (!state.dragging || !state.selected) return;
+    const pos = getCanvasPos(ev, pzCanvas);
+    const z = toComplex(pos.x, pos.y, pos.w, pos.h);
+    moveSelectedPoint(z.re, z.im);
+    redrawAll();
+  });
+
+  function stopDrag(ev) {
+    if (!state.dragging) return;
+    state.dragging = false;
+    try {
+      pzCanvas.releasePointerCapture(ev.pointerId);
+    } catch (error) {
+      // no-op
+    }
+  }
+
+  pzCanvas.addEventListener("pointerup", stopDrag);
+  pzCanvas.addEventListener("pointercancel", stopDrag);
+  pzCanvas.addEventListener("pointerleave", stopDrag);
+
+  window.addEventListener("resize", redrawAll, { passive: true });
+
+  redrawAll();
+})();
+</script>
+</body>
+</html>

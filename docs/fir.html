@@ -1,0 +1,25 @@
+<p>
+  I denne demoen undersøker vi hvordan et FIR-filter påvirker et signal i tidsdomenet og i frekvensdomenet. 
+  Et FIR-filter kan beskrives ved hjelp av en endelig impulsrespons \(h[n]\), og utgangssignalet finner vi ved konvolusjon:
+</p>
+
+<p class="doc-eq">\[
+y[n] = x[n] * h[n] = \sum_{k=-\infty}^{\infty} x[k]\,h[n-k]
+\]</p>
+
+<p>
+  Her er \(x[n]\) inngangssignalet, \(h[n]\) filterets impulsrespons, og \(y[n]\) det filtrerte signalet. 
+  Demoen lar deg velge ulike typer inngangssignaler, som toner, chirp, firkantpuls, impuls og støy, slik at du kan se hvordan samme filter virker forskjellig avhengig av signalets frekvensinnhold.
+</p>
+
+<p>
+  Parameteren <strong>kernel-lengde</strong> bestemmer hvor mange filterkoeffisienter som inngår i impulsresponsen. 
+  En større kernel-lengde gir vanligvis et mer selektivt filter, men gjør også filteret lengre i tid. 
+  Parameteren <strong>antall konvolusjoner</strong> angir hvor mange ganger filteret brukes etter hverandre. 
+  Når samme filter anvendes flere ganger, blir effekten sterkere og frekvensresponsen mer markert.
+</p>
+
+<p>
+  De ulike regulatorene for <strong>running average</strong>, <strong>lavpass</strong>, <strong>høypass</strong>, <strong>båndpass</strong> og <strong>notch-filter</strong> bestemmer hvor mye hver filtertype skal bidra i den kombinerte impulsresponsen. 
+  Øverst vises inngangssignalet og det filtrerte signalet i tidsdomenet, nederst til venstre ser du den samlede impulsresponsen \(h[n]\), og nederst til høyre vises frekvensresponsen \(|H(f)|\) i dB.
+</p>

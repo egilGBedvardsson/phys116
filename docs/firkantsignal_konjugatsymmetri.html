@@ -1,0 +1,21 @@
+<p>
+  Denne demoen viser hvordan et reelt signal kan bygges opp fra Fourierkomponenter. 
+  I Fourierserier beskrives signalet som en sum av harmoniske frekvenser, der hver komponent har en bestemt amplitude og fase. 
+  For at summen skal gi et rent reelt signal i tidsdomenet, må de positive og negative frekvenskomponentene være konjugatsymmetriske.
+</p>
+
+<p class="doc-eq">\[
+x(t)=\sum_k c_k e^{i(k\omega_0 t + k\phi)}
+\]</p>
+
+<p>
+  I uttrykket over er \(\phi\) en faseforskyvning som legges til de positive frekvenskomponentene. 
+  Når \(\phi = 0\), er sammenhengen mellom de positive og negative frekvensene intakt. 
+  Når \(\phi\) endres, brytes denne symmetrien gradvis, og vi kan se at signalet ikke lenger blir rent reelt.
+</p>
+
+<p>
+  Størrelsen \(N\) angir hvor mange harmoniske ledd som tas med i summen. 
+  Jo større \(N\) er, desto flere sinuskomponenter brukes i syntesen, og desto nærmere kommer vi den ideelle signalformen. 
+  Ved å variere både \(\phi\) og \(N\) kan du derfor undersøke både hvordan antall frekvenskomponenter påvirker signalet, og hvordan faseforholdet mellom komponentene er avgjørende for at signalet skal være fysisk meningsfullt.
+</p>

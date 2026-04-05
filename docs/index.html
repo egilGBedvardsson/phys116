@@ -85,6 +85,9 @@
   </button>
 
   <script>
+    // Bump this string when demo assets change to avoid stale GitHub Pages/browser cache.
+    const DEMO_ASSET_VERSION = "20260405-nyquist-fix";
+
     // Central registry for navigation, iframe source, and document fragments.
     const demos = {
       home: {
@@ -133,6 +136,12 @@
     let lastMeasuredFrameHeight = 0;
     let docLoadToken = 0;
     const docCache = new Map();
+
+    function withAssetVersion(src) {
+      if (!src) return src;
+      const joiner = src.includes("?") ? "&" : "?";
+      return `${src}${joiner}v=${encodeURIComponent(DEMO_ASSET_VERSION)}`;
+    }
 
     function typesetDocContent() {
       if (window.MathJax && typeof window.MathJax.typesetPromise === "function") {
@@ -233,17 +242,18 @@
       renderDocContent(key);
 
       if (demo.src) {
+        const resolvedSrc = withAssetVersion(demo.src);
         frame.style.display = "block";
         emptyState.hidden = true;
 
-        if (frame.getAttribute("src") !== demo.src) {
-          frame.setAttribute("src", demo.src);
+        if (frame.getAttribute("src") !== resolvedSrc) {
+          frame.setAttribute("src", resolvedSrc);
         } else {
           updateFrameHeight();
         }
 
         openExternal.hidden = false;
-        openExternal.href = demo.src;
+        openExternal.href = resolvedSrc;
       } else {
         if (frameResizeObserver) {
           frameResizeObserver.disconnect();

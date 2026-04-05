@@ -70,6 +70,7 @@ label {
 const T = 5;
 const f0 = 1;
 const f1 = 20;
+const plotEl = document.getElementById("plot");
 const themeSurfaceBg =
   getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
 const fsValEl = document.getElementById("fsVal");
@@ -232,6 +233,7 @@ function update() {
         font: {family: "Times New Roman, Times, serif", size: 16},
         paper_bgcolor: themeSurfaceBg,
         plot_bgcolor: themeSurfaceBg,
+        height: 720,
         margin: {l: 0, r: 0, t: 58, b: 10},
 
         yaxis: {
@@ -278,7 +280,7 @@ function update() {
         }
     };
 
-    Plotly.newPlot("plot", traces, layout);
+    Plotly.react(plotEl, traces, layout, { responsive: true });
 }
 
 document.getElementById("fsSlider").oninput = update;

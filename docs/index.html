@@ -142,6 +142,7 @@
     const demosFolderToggle = demosFolder ? demosFolder.querySelector(".folder-toggle") : null;
     const demosFolderList = demosFolder ? demosFolder.querySelector(".folder-list") : null;
     let frameResizeObserver = null;
+    let lastMeasuredFrameHeight = 0;
     let docLoadToken = 0;
     const docCache = new Map();
 
@@ -208,8 +209,9 @@
           : 1;
         const nextHeight = Math.ceil(rawHeight * zoom);
 
-        if (nextHeight > 0) {
+        if (nextHeight > 0 && Math.abs(nextHeight - lastMeasuredFrameHeight) > 2) {
           frame.style.height = `${nextHeight}px`;
+          lastMeasuredFrameHeight = nextHeight;
         }
       } catch (error) {
         // Same-origin demos are expected; ignore if frame is not readable.
@@ -278,6 +280,7 @@
         }
         frame.style.display = "none";
         frame.style.height = "0";
+        lastMeasuredFrameHeight = 0;
         frame.removeAttribute("src");
         emptyState.hidden = false;
         emptyState.innerHTML = "Velg et dokument fra sidepanelet for å starte.";

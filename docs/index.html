@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PHYS 116 · Demoportal</title>
+  <script>
+    // Ensure relative asset paths resolve correctly if URL is opened as /docs (without trailing slash).
+    if (window.location.pathname.endsWith("/docs")) {
+      window.location.replace(`${window.location.pathname}/${window.location.search}${window.location.hash}`);
+    }
+  </script>
   <link rel="stylesheet" href="./assets/design.css" />
   <script>
     window.MathJax = {

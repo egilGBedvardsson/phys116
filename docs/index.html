@@ -47,6 +47,24 @@
           <p class="sidebar-label">Innhold</p>
           <nav class="demo-list" aria-label="Demoliste">
             <button class="demo-btn" data-demo="home">Hjem</button>
+            <div class="folder" data-folder="chapters" data-open="false">
+              <button class="folder-toggle" type="button" aria-expanded="false" aria-controls="chapterFolderList">
+                <span class="folder-caret" aria-hidden="true">></span>
+                <span>Kapitler</span>
+              </button>
+              <div class="folder-list" id="chapterFolderList" hidden>
+                <button class="demo-btn" data-demo="kap01">Kap 01</button>
+                <button class="demo-btn" data-demo="kap02">Kap 02</button>
+                <button class="demo-btn" data-demo="kap03">Kap 03</button>
+                <button class="demo-btn" data-demo="kap04">Kap 04</button>
+                <button class="demo-btn" data-demo="kap05">Kap 05</button>
+                <button class="demo-btn" data-demo="kap06">Kap 06</button>
+                <button class="demo-btn" data-demo="kap07">Kap 07</button>
+                <button class="demo-btn" data-demo="kap08">Kap 08</button>
+                <button class="demo-btn" data-demo="kap09">Kap 09</button>
+                <button class="demo-btn" data-demo="kap10">Kap 10</button>
+              </div>
+            </div>
             <div class="folder" data-folder="demos" data-open="false">
               <button class="folder-toggle" type="button" aria-expanded="false" aria-controls="demoFolderList">
                 <span class="folder-caret" aria-hidden="true">></span>
@@ -102,6 +120,66 @@
         src: null,
         doc: "./content/home.html"
       },
+      kap01: {
+        title: "Kap 01",
+        path: "PHYS 116 / Kap 01",
+        src: null,
+        doc: "./content/kap01/content.html"
+      },
+      kap02: {
+        title: "Kap 02",
+        path: "PHYS 116 / Kap 02",
+        src: null,
+        doc: "./content/kap02/content.html"
+      },
+      kap03: {
+        title: "Kap 03",
+        path: "PHYS 116 / Kap 03",
+        src: null,
+        doc: "./content/kap03/content.html"
+      },
+      kap04: {
+        title: "Kap 04",
+        path: "PHYS 116 / Kap 04",
+        src: null,
+        doc: "./content/kap04/content.html"
+      },
+      kap05: {
+        title: "Kap 05",
+        path: "PHYS 116 / Kap 05",
+        src: null,
+        doc: "./content/kap05/content.html"
+      },
+      kap06: {
+        title: "Kap 06",
+        path: "PHYS 116 / Kap 06",
+        src: null,
+        doc: "./content/kap06/content.html"
+      },
+      kap07: {
+        title: "Kap 07",
+        path: "PHYS 116 / Kap 07",
+        src: null,
+        doc: "./content/kap07/content.html"
+      },
+      kap08: {
+        title: "Kap 08",
+        path: "PHYS 116 / Kap 08",
+        src: null,
+        doc: "./content/kap08/content.html"
+      },
+      kap09: {
+        title: "Kap 09",
+        path: "PHYS 116 / Kap 09",
+        src: null,
+        doc: "./content/kap09/content.html"
+      },
+      kap10: {
+        title: "Kap 10",
+        path: "PHYS 116 / Kap 10",
+        src: null,
+        doc: "./content/kap10/content.html"
+      },
       nyquist: {
         title: "Sampling, Nyquist og folding",
         path: "PHYS 116 / Demoer / Nyquist Chirp",
@@ -137,9 +215,7 @@
     const readerBreadcrumb = document.getElementById("readerBreadcrumb");
     const windowPath = document.getElementById("windowPath");
     const toTopBtn = document.getElementById("toTopBtn");
-    const demosFolder = document.querySelector('[data-folder="demos"]');
-    const demosFolderToggle = demosFolder ? demosFolder.querySelector(".folder-toggle") : null;
-    const demosFolderList = demosFolder ? demosFolder.querySelector(".folder-list") : null;
+    const folders = Array.from(document.querySelectorAll(".folder"));
     let frameResizeObserver = null;
     let lastMeasuredFrameHeight = 0;
     let docLoadToken = 0;
@@ -176,11 +252,14 @@
       await typesetDocContent();
     }
 
-    function setDemosFolderOpen(open) {
-      if (!demosFolder || !demosFolderToggle || !demosFolderList) return;
-      demosFolder.dataset.open = open ? "true" : "false";
-      demosFolderToggle.setAttribute("aria-expanded", open ? "true" : "false");
-      demosFolderList.hidden = !open;
+    function setFolderOpen(folder, open) {
+      if (!folder) return;
+      const toggle = folder.querySelector(".folder-toggle");
+      const list = folder.querySelector(".folder-list");
+      if (!toggle || !list) return;
+      folder.dataset.open = open ? "true" : "false";
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      list.hidden = !open;
     }
 
     function updateFrameHeight() {
@@ -250,7 +329,9 @@
       windowPath.textContent = demo.path;
       renderDocContent(key);
       if (key !== "home") {
-        setDemosFolderOpen(true);
+        const activeButton = buttons.find(btn => btn.dataset.demo === key);
+        const parentFolder = activeButton ? activeButton.closest(".folder") : null;
+        if (parentFolder) setFolderOpen(parentFolder, true);
       }
 
       if (demo.src) {
@@ -295,11 +376,14 @@
       });
     });
 
-    if (demosFolderToggle && demosFolderList) {
-      demosFolderToggle.addEventListener("click", () => {
-        setDemosFolderOpen(demosFolderList.hidden);
+    folders.forEach(folder => {
+      const toggle = folder.querySelector(".folder-toggle");
+      const list = folder.querySelector(".folder-list");
+      if (!toggle || !list) return;
+      toggle.addEventListener("click", () => {
+        setFolderOpen(folder, list.hidden);
       });
-    }
+    });
 
     function loadFromHash() {
       const params = new URLSearchParams(location.hash.slice(1));
@@ -308,7 +392,7 @@
         key = "firkantsignal";
       }
       if (!key || key === "home") {
-        setDemosFolderOpen(false);
+        folders.forEach(folder => setFolderOpen(folder, false));
       }
       if (key && demos[key]) {
         loadDemo(key, false);

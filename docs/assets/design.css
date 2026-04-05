@@ -278,6 +278,13 @@ body {
   background: var(--portal-sidebar-card-bg);
 }
 
+.sidebar-home-btn {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
 .sidebar-logo {
   width: 38px;
   height: auto;

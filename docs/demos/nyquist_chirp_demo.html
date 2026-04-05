@@ -40,10 +40,11 @@ label {
 
 #plot {
   width: 100%;
-  min-height: 720px;
+  min-height: 750px;
   margin-top: 12px;
   border: 1px solid var(--line);
   background: var(--theme-surface-bg, #ffffff);
+  overflow: hidden;
 }
 </style>
 </head>
@@ -70,7 +71,9 @@ label {
 const T = 5;
 const f0 = 1;
 const f1 = 20;
+const PLOT_HEIGHT = 730;
 const plotEl = document.getElementById("plot");
+let plotWidth = 0;
 const themeSurfaceBg =
   getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
 const fsValEl = document.getElementById("fsVal");
@@ -170,7 +173,15 @@ function computeSpectrogram(x, fs) {
 }
 
 // main update
-function update() {
+function measurePlotWidth() {
+    const measured = Math.max(320, Math.floor(plotEl.clientWidth));
+    if (measured > 0) {
+        plotWidth = measured;
+    }
+    return plotWidth || measured;
+}
+
+function update(remeasureWidth = false) {
     let fs = parseInt(document.getElementById("fsSlider").value);
     fsValEl.textContent = `${fs} Hz`;
 
@@ -229,12 +240,16 @@ function update() {
         },
     ];
 
+    const width = remeasureWidth || !plotWidth ? measurePlotWidth() : plotWidth;
+
     let layout = {
         font: {family: "Times New Roman, Times, serif", size: 16},
         paper_bgcolor: themeSurfaceBg,
         plot_bgcolor: themeSurfaceBg,
-        height: 720,
-        margin: {l: 75, r: 18, t: 58, b: 10},
+        autosize: false,
+        width,
+        height: PLOT_HEIGHT,
+        margin: {l: 75, r: 35, t: 58, b: 35},
 
         yaxis: {
             title: {text: "Amplitude", font: {size: 16}},
@@ -296,11 +311,12 @@ function update() {
         }
     };
 
-    Plotly.react(plotEl, traces, layout, { responsive: true });
+    Plotly.react(plotEl, traces, layout, { responsive: false });
 }
 
-document.getElementById("fsSlider").oninput = update;
-update();
+document.getElementById("fsSlider").oninput = () => update(false);
+window.addEventListener("resize", () => update(true), { passive: true });
+update(true);
 </script>
 
 </body>

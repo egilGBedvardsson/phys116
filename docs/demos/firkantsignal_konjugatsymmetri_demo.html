@@ -46,6 +46,7 @@ label {
   margin-top: 12px;
   border: 1px solid var(--line);
   background: var(--theme-surface-bg, #ffffff);
+  overflow: hidden;
 }
 h2 {
   margin: 10px;
@@ -90,8 +91,11 @@ h2 {
 const T = 1.0;
 const f0 = 3;
 const w0 = 2 * Math.PI * f0;
+const PLOT_HEIGHT = 590;
+let plotWidth = 0;
 const themeSurfaceBg =
   getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
+const plotEl = document.getElementById("plot");
 const phiValEl = document.getElementById("phiVal");
 const nValEl = document.getElementById("nVal");
 
@@ -138,13 +142,22 @@ function compute(phi, N) {
     return {ideal_real, broken_real, broken_imag};
 }
 
-function update() {
+function measurePlotWidth() {
+    const measured = Math.max(320, Math.floor(plotEl.clientWidth));
+    if (measured > 0) {
+        plotWidth = measured;
+    }
+    return plotWidth || measured;
+}
+
+function update(remeasureWidth = false) {
     let phi = parseFloat(document.getElementById("phiSlider").value);
     let N = parseInt(document.getElementById("nSlider").value);
     phiValEl.textContent = `${phi.toFixed(2)} rad`;
     nValEl.textContent = `${N}`;
 
     let data = compute(phi, N);
+    const width = remeasureWidth || !plotWidth ? measurePlotWidth() : plotWidth;
 
     let traces = [
         {
@@ -173,8 +186,10 @@ function update() {
       font: {family: "Times New Roman, Times, serif", size: 16},
       paper_bgcolor: themeSurfaceBg,
       plot_bgcolor: themeSurfaceBg,
-      height: 590,
-      margin: {l: 75, r: 50, t: 58, b: 10},
+      autosize: false,
+      width,
+      height: PLOT_HEIGHT,
+      margin: {l: 75, r: 35, t: 58, b: 20},
       legend: {
           orientation: "h",
           x: 0,
@@ -229,13 +244,14 @@ function update() {
       }
   };
 
-    Plotly.newPlot('plot', traces, layout);
+    Plotly.react(plotEl, traces, layout, { responsive: false });
 }
 
-document.getElementById("phiSlider").oninput = update;
-document.getElementById("nSlider").oninput = update;
+document.getElementById("phiSlider").oninput = () => update(false);
+document.getElementById("nSlider").oninput = () => update(false);
+window.addEventListener("resize", () => update(true), { passive: true });
 
-update();
+update(true);
 </script>
 
 </body>

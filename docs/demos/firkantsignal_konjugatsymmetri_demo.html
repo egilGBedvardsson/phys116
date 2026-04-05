@@ -21,7 +21,7 @@
 
 #controls {
   width: 100%;
-  padding: 18px 0 16px;
+  padding: 18px 0 17px;
   box-sizing: border-box;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -173,8 +173,8 @@ function update() {
       font: {family: "Times New Roman, Times, serif", size: 16},
       paper_bgcolor: themeSurfaceBg,
       plot_bgcolor: themeSurfaceBg,
-      height: 620,
-      margin: {l: 8, r: 18, t: 58, b: 10},
+      height: 590,
+      margin: {l: 75, r: 50, t: 58, b: 10},
       legend: {
           orientation: "h",
           x: 0,
@@ -191,6 +191,10 @@ function update() {
           tickfont: {size: 16},
           range: [-1.5, 1.5],
           domain: [0.55, 0.98],
+          showline: true,
+          mirror: true,
+          linecolor: "#bdbdbd",
+          linewidth: 1,
           automargin: true
       },
 
@@ -199,12 +203,27 @@ function update() {
           tickfont: {size: 16},
           range: [-2, 2],
           domain: [0.02, 0.45],
+          showline: true,
+          mirror: true,
+          linecolor: "#bdbdbd",
+          linewidth: 1,
           automargin: true
       },
 
-      xaxis: {showticklabels: false, tickfont: {size: 16}},
+      xaxis: {
+          showticklabels: false,
+          showline: true,
+          mirror: true,
+          linecolor: "#bdbdbd",
+          linewidth: 1,
+          tickfont: {size: 16}
+      },
       xaxis2: {
           title: {text: "Tid (s)", font: {size: 22}},
+          showline: true,
+          mirror: true,
+          linecolor: "#bdbdbd",
+          linewidth: 1,
           tickfont: {size: 16},
           automargin: true
       }

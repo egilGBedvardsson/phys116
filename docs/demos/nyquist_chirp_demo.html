@@ -234,13 +234,17 @@ function update() {
         paper_bgcolor: themeSurfaceBg,
         plot_bgcolor: themeSurfaceBg,
         height: 720,
-        margin: {l: 8, r: 18, t: 58, b: 10},
+        margin: {l: 75, r: 18, t: 58, b: 10},
 
         yaxis: {
             title: {text: "Amplitude", font: {size: 16}},
             tickfont: {size: 16},
             domain: [0.56, 0.98],
             range: [-1.2, 1.2],
+            showline: true,
+            mirror: true,
+            linecolor: "#bdbdbd",
+            linewidth: 1,
             automargin: true
         },
         yaxis2: {
@@ -248,6 +252,10 @@ function update() {
             tickfont: {size: 16},
             domain: [0.03, 0.44],
             range: [0, nyq],
+            showline: true,
+            mirror: true,
+            linecolor: "#bdbdbd",
+            linewidth: 1,
             automargin: true
         },
 
@@ -257,6 +265,10 @@ function update() {
             showticklabels: false,
             ticks: "",
             matches: "x2",
+            showline: true,
+            mirror: true,
+            linecolor: "#bdbdbd",
+            linewidth: 1,
             tickfont: {size: 16}
         },
         xaxis2: {
@@ -266,6 +278,10 @@ function update() {
             title: {text: "Tid (s)", font: {size: 18}},
             range: [0, T],
             showticklabels: true,
+            showline: true,
+            mirror: true,
+            linecolor: "#bdbdbd",
+            linewidth: 1,
             tickfont: {size: 16},
             automargin: true
         },

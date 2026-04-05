@@ -189,25 +189,18 @@
         const doc = frame.contentDocument;
         if (!doc) return;
 
+        // Measure the actual demo container to avoid feedback loops with iframe viewport height.
+        const demoShell = doc.querySelector(".demo-shell");
         const html = doc.documentElement;
         const body = doc.body;
-        const rawHeight = Math.max(
-          body ? body.scrollHeight : 0,
-          body ? body.offsetHeight : 0,
-          html ? html.scrollHeight : 0,
-          html ? html.offsetHeight : 0
+        const nextHeight = Math.ceil(
+          demoShell
+            ? demoShell.getBoundingClientRect().height
+            : Math.max(
+                body ? body.scrollHeight : 0,
+                html ? html.scrollHeight : 0
+              )
         );
-
-        // Compensate when demos use CSS zoom (e.g., 0.8) so iframe height matches visible content.
-        const zoomTarget = body || html;
-        const zoomValue = zoomTarget && doc.defaultView
-          ? doc.defaultView.getComputedStyle(zoomTarget).zoom
-          : "1";
-        const parsedZoom = Number.parseFloat(zoomValue);
-        const zoom = Number.isFinite(parsedZoom) && parsedZoom > 0
-          ? parsedZoom
-          : 1;
-        const nextHeight = Math.ceil(rawHeight * zoom);
 
         if (nextHeight > 0 && Math.abs(nextHeight - lastMeasuredFrameHeight) > 2) {
           frame.style.height = `${nextHeight}px`;
@@ -235,8 +228,8 @@
 
       if ("ResizeObserver" in window) {
         frameResizeObserver = new ResizeObserver(updateFrameHeight);
-        if (doc.documentElement) frameResizeObserver.observe(doc.documentElement);
-        if (doc.body) frameResizeObserver.observe(doc.body);
+        const observedTarget = doc.querySelector(".demo-shell") || doc.body || doc.documentElement;
+        if (observedTarget) frameResizeObserver.observe(observedTarget);
       }
     }
 

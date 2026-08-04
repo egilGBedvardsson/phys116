@@ -47,6 +47,7 @@ label {
   border: 1px solid var(--line);
   background: var(--theme-surface-bg, #ffffff);
   overflow: hidden;
+  position: relative;
 }
 h2 {
   margin: 10px;
@@ -93,8 +94,27 @@ const f0 = 3;
 const w0 = 2 * Math.PI * f0;
 const PLOT_HEIGHT = 590;
 let plotWidth = 0;
-const themeSurfaceBg =
-  getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
+const rootStyles = getComputedStyle(document.documentElement);
+
+function resolveCssVar(name, fallback) {
+  const raw = rootStyles.getPropertyValue(name).trim();
+  if (!raw) return fallback;
+  if (raw.startsWith("var(") && raw.endsWith(")")) {
+    const inner = raw.slice(4, -1).trim();
+    const variableName = inner.split(",")[0].trim();
+    return resolveCssVar(`--${variableName.replace(/^--/, "")}`, fallback);
+  }
+  return raw;
+}
+
+const themeSurfaceBg = resolveCssVar("--plot-bg", "#ffffff");
+const plotColors = {
+  bg: themeSurfaceBg,
+  axis: resolveCssVar("--plot-axis", "#b8b8b8"),
+  text: resolveCssVar("--plot-text", "#111111"),
+  primary: resolveCssVar("--plot-primary", "#3b4cc0"),
+  secondary: resolveCssVar("--plot-secondary", "#d11141")
+};
 const plotEl = document.getElementById("plot");
 const phiValEl = document.getElementById("phiVal");
 const nValEl = document.getElementById("nVal");
@@ -164,19 +184,19 @@ function update(remeasureWidth = false) {
             x: t,
             y: data.ideal_real,
             name: "Ideell (symmetrisk konjugering)",
-            line: {color: "black", dash: "dash"}
+            line: {color: plotColors.text, dash: "dash"}
         },
         {
             x: t,
             y: data.broken_real,
             name: "Brutt par (Reell del)",
-            line: {color: "red"}
+            line: {color: plotColors.secondary}
         },
         {
             x: t,
             y: data.broken_imag,
             name: "Imaginær lekkasje",
-            line: {color: "blue"},
+            line: {color: plotColors.primary},
             xaxis: "x",
             yaxis: "y2"
         }
@@ -208,7 +228,7 @@ function update(remeasureWidth = false) {
           domain: [0.55, 0.98],
           showline: true,
           mirror: true,
-          linecolor: "#bdbdbd",
+          linecolor: plotColors.axis,
           linewidth: 1,
           automargin: true
       },
@@ -220,7 +240,7 @@ function update(remeasureWidth = false) {
           domain: [0.02, 0.45],
           showline: true,
           mirror: true,
-          linecolor: "#bdbdbd",
+          linecolor: plotColors.axis,
           linewidth: 1,
           automargin: true
       },
@@ -229,7 +249,7 @@ function update(remeasureWidth = false) {
           showticklabels: false,
           showline: true,
           mirror: true,
-          linecolor: "#bdbdbd",
+          linecolor: plotColors.axis,
           linewidth: 1,
           tickfont: {size: 16}
       },
@@ -237,7 +257,7 @@ function update(remeasureWidth = false) {
           title: {text: "Tid (s)", font: {size: 22}},
           showline: true,
           mirror: true,
-          linecolor: "#bdbdbd",
+          linecolor: plotColors.axis,
           linewidth: 1,
           tickfont: {size: 16},
           automargin: true
@@ -250,6 +270,9 @@ function update(remeasureWidth = false) {
 document.getElementById("phiSlider").oninput = () => update(false);
 document.getElementById("nSlider").oninput = () => update(false);
 window.addEventListener("resize", () => update(true), { passive: true });
+window.addEventListener("load", () => update(true));
+requestAnimationFrame(() => update(true));
+setTimeout(() => update(true), 120);
 
 update(true);
 </script>

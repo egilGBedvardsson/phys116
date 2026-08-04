@@ -106,6 +106,19 @@ label {
     const speedVal = document.getElementById("speedVal");
     const ctx = plot.getContext("2d");
     const themeSurfaceBg = getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
+    const plotColors = {
+      bg: getComputedStyle(document.documentElement).getPropertyValue("--plot-bg").trim() || "#ffffff",
+      grid: getComputedStyle(document.documentElement).getPropertyValue("--plot-grid").trim() || "#e4e4e4",
+      axis: getComputedStyle(document.documentElement).getPropertyValue("--plot-axis").trim() || "#b8b8b8",
+      axisSoft: getComputedStyle(document.documentElement).getPropertyValue("--plot-axis-soft").trim() || "#bbb",
+      axisMuted: getComputedStyle(document.documentElement).getPropertyValue("--plot-axis-muted").trim() || "rgba(34, 34, 34, 0.35)",
+      text: getComputedStyle(document.documentElement).getPropertyValue("--plot-text").trim() || "#111111",
+      muted: getComputedStyle(document.documentElement).getPropertyValue("--plot-muted").trim() || "#666666",
+      primary: getComputedStyle(document.documentElement).getPropertyValue("--plot-primary").trim() || "#3b4cc0",
+      primaryFaded: getComputedStyle(document.documentElement).getPropertyValue("--plot-primary-faded").trim() || "rgba(59, 76, 192, 0.55)",
+      secondary: getComputedStyle(document.documentElement).getPropertyValue("--plot-secondary").trim() || "#d11141",
+      signalMuted: getComputedStyle(document.documentElement).getPropertyValue("--plot-signal-muted").trim() || "#9b9b9e"
+    };
 
     let width = 0;
     let height = 0;
@@ -131,7 +144,7 @@ label {
     }
 
     function drawAxes(graphX, graphY, graphW, graphH) {
-      ctx.strokeStyle = "#bbb";
+      ctx.strokeStyle = plotColors.axisSoft;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.rect(graphX, graphY, graphW, graphH);
@@ -173,7 +186,7 @@ label {
       const current = buffer[0] || { combined: 0, envelope: 0 };
 
       const stepX = graphW / (MAX_POINTS - 1);
-      ctx.strokeStyle = "#9b9b9e";
+      ctx.strokeStyle = plotColors.signalMuted;
       ctx.lineWidth = 1.7;
       ctx.beginPath();
       buffer.forEach((point, index) => {
@@ -184,7 +197,7 @@ label {
       });
       ctx.stroke();
 
-      ctx.strokeStyle = "#d11141";
+      ctx.strokeStyle = plotColors.secondary;
       ctx.lineWidth = 2;
       ctx.beginPath();
       buffer.forEach((point, index) => {
@@ -195,23 +208,23 @@ label {
       });
       ctx.stroke();
 
-      ctx.fillStyle = "#222";
+      ctx.fillStyle = plotColors.text;
       ctx.font = "13px sans-serif";
       ctx.fillText(`f1 = ${f1.toFixed(1)} Hz`, graphX + 10, graphY + graphH + 24);
       ctx.fillText(`f2 = ${f2.toFixed(1)} Hz`, graphX + 140, graphY + graphH + 24);
       ctx.fillText(`Delta f = ${(Math.abs(f2 - f1)).toFixed(1)} Hz`, graphX + 280, graphY + graphH + 24);
       ctx.fillText("Kombinert signal", graphX + 10, graphY + 18);
-      ctx.fillStyle = "#d11141";
+      ctx.fillStyle = plotColors.secondary;
       ctx.fillText("Envelope", graphX + 170, graphY + 18);
 
       const markerX = graphX;
       const currentY = graphY + graphH / 2 - current.combined * (graphH * 0.35);
-      ctx.fillStyle = "#3b4cc0";
+      ctx.fillStyle = plotColors.primary;
       ctx.beginPath();
       ctx.arc(markerX, currentY, 5, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "#d11141";
+      ctx.fillStyle = plotColors.secondary;
       const envY = graphY + graphH / 2 - current.envelope * (graphH * 0.35);
       ctx.beginPath();
       ctx.arc(markerX, envY, 5, 0, Math.PI * 2);

@@ -76,6 +76,12 @@ const plotEl = document.getElementById("plot");
 let plotWidth = 0;
 const themeSurfaceBg =
   getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
+const plotColors = {
+  axis: getComputedStyle(document.documentElement).getPropertyValue("--plot-axis").trim() || "#b8b8b8",
+  axisMuted: getComputedStyle(document.documentElement).getPropertyValue("--plot-axis-soft").trim() || "#bbb",
+  text: getComputedStyle(document.documentElement).getPropertyValue("--plot-text").trim() || "black",
+  secondary: getComputedStyle(document.documentElement).getPropertyValue("--plot-secondary").trim() || "#d11141",
+};
 const fsValEl = document.getElementById("fsVal");
 const COOLWARM_SCALE = [
     [0.0, "#3b4cc0"],
@@ -203,7 +209,7 @@ function update(remeasureWidth = false) {
             x: t_cont,
             y: signal_cont,
             name: "Signal",
-            line: {color: "black"},
+            line: {color: plotColors.text},
             opacity: 0.5,
             xaxis: "x",
             yaxis: "y"
@@ -212,7 +218,7 @@ function update(remeasureWidth = false) {
             x: t_cont,
             y: x_recon,
             name: "Rekonstruert",
-            line: {color: "red"},
+            line: {color: plotColors.secondary},
             xaxis: "x",
             yaxis: "y"
         },
@@ -221,7 +227,7 @@ function update(remeasureWidth = false) {
             y: x_sample,
             mode: "markers",
             name: "Målepunkter",
-            marker: {color: "black", size: 4},
+            marker: {color: plotColors.text, size: 4},
             xaxis: "x",
             yaxis: "y"
         },
@@ -258,7 +264,7 @@ function update(remeasureWidth = false) {
             range: [-1.2, 1.2],
             showline: true,
             mirror: true,
-            linecolor: "#bdbdbd",
+            linecolor: plotColors.axis,
             linewidth: 1,
             automargin: true
         },
@@ -269,7 +275,7 @@ function update(remeasureWidth = false) {
             range: [0, nyq],
             showline: true,
             mirror: true,
-            linecolor: "#bdbdbd",
+            linecolor: plotColors.axis,
             linewidth: 1,
             automargin: true
         },
@@ -282,7 +288,7 @@ function update(remeasureWidth = false) {
             matches: "x2",
             showline: true,
             mirror: true,
-            linecolor: "#bdbdbd",
+            linecolor: plotColors.axis,
             linewidth: 1,
             tickfont: {size: 16}
         },
@@ -295,7 +301,7 @@ function update(remeasureWidth = false) {
             showticklabels: true,
             showline: true,
             mirror: true,
-            linecolor: "#bdbdbd",
+            linecolor: plotColors.axis,
             linewidth: 1,
             tickfont: {size: 16},
             automargin: true

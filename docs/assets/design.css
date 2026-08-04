@@ -18,6 +18,23 @@
   --color-sidebar-text: #000000;
   --color-ink: var(--color-text-primary);
 
+  /* Plot colors */
+  --plot-bg: var(--color-surface-bg);
+  --plot-grid: #e4e4e4;
+  --plot-axis: #b8b8b8;
+  --plot-axis-soft: #bbb;
+  --plot-axis-muted: rgba(34, 34, 34, 0.35);
+  --plot-text: #111111;
+  --plot-muted: #666666;
+  --plot-primary: #3b4cc0;
+  --plot-primary-faded: rgba(59, 76, 192, 0.55);
+  --plot-secondary: #d11141;
+  --plot-tertiary: #488fa3;
+  --plot-highlight: #0a84ff;
+  --plot-pole: #8b0000;
+  --plot-zero: #111111;
+  --plot-signal-muted: #9b9b9e;
+
   /* Typography */
   --font-family-ui: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
   --font-family-serif: "Georgia", "Times New Roman", serif;

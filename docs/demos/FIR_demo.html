@@ -60,6 +60,17 @@
       padding-bottom: 8px;
     }
 
+    #plotLegend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      color: #333;
+      font-size: 14px;
+      padding: 6px 10px 0;
+      line-height: 1.4;
+    }
+
     #subplots {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -163,6 +174,7 @@
 
     <section id="output">
       <canvas id="outputCanvas" width="1200" height="360"></canvas>
+      <div id="plotLegend">Inngang x[n] (grå) + utgang y[n] (svart)</div>
       <div id="subplots">
         <canvas id="impulseCanvas" width="590" height="220"></canvas>
         <canvas id="responseCanvas" width="590" height="220"></canvas>
@@ -213,12 +225,23 @@
     const outputCanvas = document.getElementById("outputCanvas");
     const impulseCanvas = document.getElementById("impulseCanvas");
     const responseCanvas = document.getElementById("responseCanvas");
+    const plotLegend = document.getElementById("plotLegend");
 
     const outputCtx = outputCanvas.getContext("2d");
     const impulseCtx = impulseCanvas.getContext("2d");
     const responseCtx = responseCanvas.getContext("2d");
     const themeSurfaceBg =
       getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
+    const plotColors = {
+      bg: getComputedStyle(document.documentElement).getPropertyValue("--plot-bg").trim() || "#ffffff",
+      grid: getComputedStyle(document.documentElement).getPropertyValue("--plot-grid").trim() || "#e4e4e4",
+      axis: getComputedStyle(document.documentElement).getPropertyValue("--plot-axis").trim() || "#b8b8b8",
+      axisMuted: getComputedStyle(document.documentElement).getPropertyValue("--plot-axis-soft").trim() || "#bbb",
+      text: getComputedStyle(document.documentElement).getPropertyValue("--plot-text").trim() || "#111111",
+      muted: getComputedStyle(document.documentElement).getPropertyValue("--plot-muted").trim() || "#666666",
+      primary: getComputedStyle(document.documentElement).getPropertyValue("--plot-primary").trim() || "#3b4cc0",
+      secondary: getComputedStyle(document.documentElement).getPropertyValue("--plot-secondary").trim() || "#d11141"
+    };
 
     function seededNoise(n) {
       const x = Math.sin(n * 78.233 + 0.918) * 43758.5453;
@@ -392,6 +415,8 @@
       const minF = Math.min(f1, f2);
       const maxF = Math.max(f1, f2);
 
+      const lowCut = clamp(0.02 + 0.45 * sLow, 0.02, 0.48);
+      const highCut = clamp(0.02 + 0.45 * sHigh, 0.02, 0.48);
       const bpLow = clamp((minF - 8) / fs, 0.02, 0.35);
       const bpHigh = clamp((maxF + 8) / fs, bpLow + 0.03, 0.48);
 
@@ -406,10 +431,10 @@
         chain.push(blendKernel(movingAverageKernel(length), sSmooth));
       }
       if (sLow > 0) {
-        chain.push(blendKernel(lowpassKernel(length, 0.12), sLow));
+        chain.push(blendKernel(lowpassKernel(length, lowCut), sLow));
       }
       if (sHigh > 0) {
-        chain.push(blendKernel(highpassKernel(length, 0.16), sHigh));
+        chain.push(blendKernel(highpassKernel(length, highCut), sHigh));
       }
       if (sBand > 0) {
         chain.push(blendKernel(bandpassKernel(length, bpLow, bpHigh), sBand));
@@ -438,7 +463,9 @@
         activeFilters: chain.length,
         notchCenterHz: notchCenter * fs,
         bandLowHz: bpLow * fs,
-        bandHighHz: bpHigh * fs
+        bandHighHz: bpHigh * fs,
+        lowCutHz: lowCut * fs,
+        highCutHz: highCut * fs
       };
     }
 
@@ -451,7 +478,7 @@
     function drawGrid(ctx, canvas) {
       const w = canvas.width;
       const h = canvas.height;
-      ctx.strokeStyle = "#ececec";
+      ctx.strokeStyle = plotColors.grid;
       ctx.lineWidth = 1;
 
       for (let i = 1; i < 4; i++) {
@@ -526,7 +553,7 @@
       }
 
       outputCtx.lineWidth = 1.5;
-      outputCtx.strokeStyle = "#b4b4b4";
+      outputCtx.strokeStyle = plotColors.axisMuted;
       outputCtx.beginPath();
       for (let i = 0; i < inputSmooth.length; i++) {
         const x = mapX(i, inputSmooth.length);
@@ -537,7 +564,7 @@
       outputCtx.stroke();
 
       outputCtx.lineWidth = 2;
-      outputCtx.strokeStyle = "#111";
+      outputCtx.strokeStyle = plotColors.text;
       outputCtx.beginPath();
       for (let i = 0; i < outputSmooth.length; i++) {
         const x = mapX(i, outputSmooth.length);
@@ -547,13 +574,6 @@
       }
       outputCtx.stroke();
 
-      outputCtx.fillStyle = "#111";
-      outputCtx.font = "16px Times New Roman";
-      outputCtx.fillText("Inngang x[n] (grå) + utgang y[n] (svart)", 14, 24);
-
-      outputCtx.fillStyle = "#666";
-      outputCtx.font = "14px Times New Roman";
-      outputCtx.fillText("n", w - 16, h - 10);
     }
 
     function drawImpulse(kernel) {
@@ -564,7 +584,7 @@
       const h = impulseCanvas.height;
       const maxAbs = Math.max(1e-6, ...kernel.map(Math.abs));
 
-      impulseCtx.strokeStyle = "#111";
+      impulseCtx.strokeStyle = plotColors.text;
       impulseCtx.lineWidth = 1.4;
       impulseCtx.beginPath();
 
@@ -576,7 +596,7 @@
       }
       impulseCtx.stroke();
 
-      impulseCtx.fillStyle = "#111";
+      impulseCtx.fillStyle = plotColors.text;
       impulseCtx.font = "15px Times New Roman";
       impulseCtx.fillText("Kombinert impulsrespons h[n]", 12, 22);
     }
@@ -593,7 +613,7 @@
       const w = responseCanvas.width;
       const h = responseCanvas.height;
 
-      responseCtx.strokeStyle = "#111";
+      responseCtx.strokeStyle = plotColors.text;
       responseCtx.lineWidth = 1.7;
       responseCtx.beginPath();
 
@@ -606,11 +626,11 @@
       }
       responseCtx.stroke();
 
-      responseCtx.fillStyle = "#111";
+      responseCtx.fillStyle = plotColors.text;
       responseCtx.font = "15px Times New Roman";
       responseCtx.fillText("|H(f)| i dB", 12, 22);
 
-      responseCtx.fillStyle = "#666";
+      responseCtx.fillStyle = plotColors.muted;
       responseCtx.font = "13px Times New Roman";
       responseCtx.fillText("0 Hz", 8, h - 8);
       responseCtx.fillText(`${Math.round(freq[freq.length - 1])} Hz`, w - 48, h - 8);
@@ -629,6 +649,10 @@
       readouts.notch.textContent = `${controls.notch.value}%`;
     }
 
+    function formatHz(value) {
+      return `${Math.round(value)} Hz`;
+    }
+
     function refresh() {
       updateReadouts();
 
@@ -640,10 +664,34 @@
       drawImpulse(filterState.total);
       drawResponse(filterState.total);
 
-      summary.textContent =
-        `Aktive filterblokker: ${filterState.activeFilters} | Kombinerte koeffisienter: ${filterState.total.length} | ` +
-        `Båndpassvindu: ${filterState.bandLowHz.toFixed(1)}-${filterState.bandHighHz.toFixed(1)} Hz | ` +
-        `Notch-senter: ${filterState.notchCenterHz.toFixed(1)} Hz`;
+      const active = [];
+      if (Number(controls.smooth.value) > 0) active.push("Smoothing");
+      if (Number(controls.low.value) > 0) active.push("Lavpass");
+      if (Number(controls.high.value) > 0) active.push("Høypass");
+      if (Number(controls.band.value) > 0) active.push("Båndpass");
+      if (Number(controls.notch.value) > 0) active.push("Notch");
+
+      const details = [
+        `Signal: ${controls.signalType.options[controls.signalType.selectedIndex].text}`,
+        `Filtre: ${active.length ? active.join(" + ") : "Ingen"}`,
+        `Koeffisientlengde: ${filterState.total.length}`
+      ];
+
+      if (Number(controls.low.value) > 0) {
+        details.push(`LP cutoff: ${formatHz(filterState.lowCutHz)}`);
+      }
+      if (Number(controls.high.value) > 0) {
+        details.push(`HP cutoff: ${formatHz(filterState.highCutHz)}`);
+      }
+      if (Number(controls.band.value) > 0) {
+        details.push(`Båndpass: ${formatHz(filterState.bandLowHz)}–${formatHz(filterState.bandHighHz)}`);
+      }
+      if (Number(controls.notch.value) > 0) {
+        details.push(`Notch senter: ${formatHz(filterState.notchCenterHz)}`);
+      }
+
+      summary.textContent = details.join(" | ");
+      plotLegend.textContent = "Inngang x[n] (grå) + utgang y[n] (svart)";
     }
 
     Object.values(controls).forEach(el => {

@@ -46,8 +46,8 @@ label {
 
 #plot {
   width: 100%;
-  min-height: 560px;
-  margin-top: 12px;
+  min-height: 380px;
+  margin-top: 8px;
   border: 1px solid var(--line);
   background: var(--theme-surface-bg, #ffffff);
   display: block;
@@ -144,23 +144,15 @@ label {
       ctx.setLineDash([]);
     }
 
-    function drawText() {
-      ctx.fillStyle = "#222";
-      ctx.font = "14px sans-serif";
-      ctx.fillText("Beats-demo", 20, 28);
-      ctx.fillText("To signaler med liten frekvensforskjell gir en pulserende amplitude.", 20, 50);
-    }
-
     function animate() {
       resizeCanvas();
       ctx.fillStyle = themeSurfaceBg;
       ctx.fillRect(0, 0, width, height);
-      drawText();
 
       const graphX = 20;
-      const graphY = 80;
+      const graphY = 60;
       const graphW = width - 40;
-      const graphH = height - 150;
+      const graphH = height - 110;
       drawAxes(graphX, graphY, graphW, graphH);
 
       const f1 = Number(freq1Range.value);

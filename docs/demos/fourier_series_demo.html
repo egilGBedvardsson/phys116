@@ -46,8 +46,8 @@ label {
 
 #plot {
   width: 100%;
-  min-height: 660px;
-  margin-top: 12px;
+  min-height: 460px;
+  margin-top: 8px;
   border: 1px solid var(--line);
   background: var(--theme-surface-bg, #ffffff);
   display: block;
@@ -155,7 +155,7 @@ label {
       const shape = shapeSelect.value;
       const harmonics = Number(termsRange.value);
       const coefs = getCoefficients(shape, harmonics);
-      const origin = { x: width * 0.28, y: height * 0.52 };
+      const origin = { x: width * 0.28, y: height * 0.47 };
       let x = origin.x;
       let y = origin.y;
 
@@ -165,11 +165,6 @@ label {
       ctx.moveTo(origin.x, 0);
       ctx.lineTo(origin.x, height);
       ctx.stroke();
-
-      ctx.fillStyle = "#222";
-      ctx.font = "14px sans-serif";
-      ctx.fillText("Epicykel-konstruksjon", 20, 26);
-      ctx.fillText("Sporet viser summen av harmoniske rotasjoner.", 20, 46);
 
       for (const coef of coefs) {
         const angle = coef.freq * time * step + coef.phase;
@@ -205,7 +200,7 @@ label {
       ctx.strokeStyle = "#bbb";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.rect(graphX, 24, graphWidth, height - 56);
+      ctx.rect(graphX, 14, graphWidth, height - 44);
       ctx.stroke();
 
       ctx.strokeStyle = "rgba(34, 34, 34, 0.35)";
@@ -215,13 +210,6 @@ label {
       ctx.lineTo(graphX, y);
       ctx.stroke();
       ctx.setLineDash([]);
-
-      ctx.fillStyle = "#222";
-      ctx.fillText("Waveform", graphX + 12, 40);
-      ctx.fillText(`Målkurve: ${shape === "square" ? "Firkant" : shape === "sawtooth" ? "Sagtenn" : "Triangel"}`, graphX + 12, 62);
-      ctx.fillText(`Harmonier: ${harmonics}`, graphX + 12, 84);
-      ctx.fillText(`Hastighet: ${step.toFixed(1)}x`, graphX + 12, 106);
-      ctx.fillText("Tid →", graphX + graphWidth - 40, height - 16);
 
       ctx.strokeStyle = "#999";
       ctx.lineWidth = 1;

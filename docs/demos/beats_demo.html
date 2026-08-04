@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../assets/design.css">
+<style>
+:root {
+  --line: #d9d9d9;
+  --text: #111111;
+}
+
+#container {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+#controls {
+  width: 100%;
+  padding: 18px 0 16px;
+  box-sizing: border-box;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(170px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.control {
+  min-width: 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#plot {
+  width: 100%;
+  min-height: 560px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  background: var(--theme-surface-bg, #ffffff);
+  display: block;
+}
+
+@media (max-width: 860px) {
+  #controls {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body class="demo-page">
+  <div id="container" class="demo-shell">
+    <section id="controls">
+      <div class="control">
+        <div class="row"><label for="freq1Range">Frekvens 1</label><span id="freq1Val" class="value"></span></div>
+        <input id="freq1Range" class="slider" type="range" min="1" max="16" step="0.5" value="5" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="freq2Range">Frekvens 2</label><span id="freq2Val" class="value"></span></div>
+        <input id="freq2Range" class="slider" type="range" min="1" max="16" step="0.5" value="6" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="amplitudeRange">Amplitude</label><span id="amplitudeVal" class="value"></span></div>
+        <input id="amplitudeRange" class="slider" type="range" min="0.2" max="1" step="0.05" value="0.7" />
+      </div>
+
+      <div class="control">
+        <div class="row"><label for="speedRange">Hastighet</label><span id="speedVal" class="value"></span></div>
+        <input id="speedRange" class="slider" type="range" min="0.2" max="3" step="0.1" value="1" />
+      </div>
+    </section>
+
+    <canvas id="plot"></canvas>
+
+    <div id="top-banner" class="demo-footer">
+      <img class="demo-footer-logo" src="../assets/UiB_PositivEmblem.png" alt="University logo" />
+      <span>Universitetet i Bergen</span>
+      <span>PHYS 116</span>
+    </div>
+  </div>
+
+  <script>
+    const plot = document.getElementById("plot");
+    const freq1Range = document.getElementById("freq1Range");
+    const freq2Range = document.getElementById("freq2Range");
+    const amplitudeRange = document.getElementById("amplitudeRange");
+    const speedRange = document.getElementById("speedRange");
+    const freq1Val = document.getElementById("freq1Val");
+    const freq2Val = document.getElementById("freq2Val");
+    const amplitudeVal = document.getElementById("amplitudeVal");
+    const speedVal = document.getElementById("speedVal");
+    const ctx = plot.getContext("2d");
+    const themeSurfaceBg = getComputedStyle(document.documentElement).getPropertyValue("--theme-surface-bg").trim() || "#ffffff";
+
+    let width = 0;
+    let height = 0;
+    let dpr = window.devicePixelRatio || 1;
+    let time = 0;
+    const buffer = [];
+    const MAX_POINTS = 720;
+
+    function updateReadouts() {
+      freq1Val.textContent = `${freq1Range.value} Hz`;
+      freq2Val.textContent = `${freq2Range.value} Hz`;
+      amplitudeVal.textContent = `${Number(amplitudeRange.value).toFixed(2)}`;
+      speedVal.textContent = `${Number(speedRange.value).toFixed(1)}x`;
+    }
+
+    function resizeCanvas() {
+      width = plot.clientWidth;
+      height = Math.max(520, plot.clientHeight);
+      plot.width = Math.max(1, Math.floor(width * dpr));
+      plot.height = Math.max(1, Math.floor(height * dpr));
+      plot.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function drawAxes(graphX, graphY, graphW, graphH) {
+      ctx.strokeStyle = "#bbb";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.rect(graphX, graphY, graphW, graphH);
+      ctx.stroke();
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(graphX, graphY + graphH / 2);
+      ctx.lineTo(graphX + graphW, graphY + graphH / 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawText() {
+      ctx.fillStyle = "#222";
+      ctx.font = "14px sans-serif";
+      ctx.fillText("Beats-demo", 20, 28);
+      ctx.fillText("To signaler med liten frekvensforskjell gir en pulserende amplitude.", 20, 50);
+    }
+
+    function animate() {
+      resizeCanvas();
+      ctx.fillStyle = themeSurfaceBg;
+      ctx.fillRect(0, 0, width, height);
+      drawText();
+
+      const graphX = 20;
+      const graphY = 80;
+      const graphW = width - 40;
+      const graphH = height - 150;
+      drawAxes(graphX, graphY, graphW, graphH);
+
+      const f1 = Number(freq1Range.value);
+      const f2 = Number(freq2Range.value);
+      const amplitude = Number(amplitudeRange.value);
+      const speed = Number(speedRange.value);
+      const dt = 0.015 * speed;
+      const omega1 = 2 * Math.PI * f1;
+      const omega2 = 2 * Math.PI * f2;
+      const t = time;
+      const y1 = amplitude * Math.sin(omega1 * t);
+      const y2 = amplitude * Math.sin(omega2 * t);
+      const combined = y1 + y2;
+      const envelope = 2 * amplitude * Math.cos(Math.PI * (f2 - f1) * t);
+
+      buffer.unshift({ combined, envelope });
+      if (buffer.length > MAX_POINTS) buffer.pop();
+      const current = buffer[0] || { combined: 0, envelope: 0 };
+
+      const stepX = graphW / (MAX_POINTS - 1);
+      ctx.strokeStyle = "#9b9b9e";
+      ctx.lineWidth = 1.7;
+      ctx.beginPath();
+      buffer.forEach((point, index) => {
+        const x = graphX + index * stepX;
+        const y = graphY + graphH / 2 - point.combined * (graphH * 0.35);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      ctx.strokeStyle = "#d11141";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      buffer.forEach((point, index) => {
+        const x = graphX + index * stepX;
+        const y = graphY + graphH / 2 - point.envelope * (graphH * 0.35);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      ctx.fillStyle = "#222";
+      ctx.font = "13px sans-serif";
+      ctx.fillText(`f1 = ${f1.toFixed(1)} Hz`, graphX + 10, graphY + graphH + 24);
+      ctx.fillText(`f2 = ${f2.toFixed(1)} Hz`, graphX + 140, graphY + graphH + 24);
+      ctx.fillText(`Delta f = ${(Math.abs(f2 - f1)).toFixed(1)} Hz`, graphX + 280, graphY + graphH + 24);
+      ctx.fillText("Kombinert signal", graphX + 10, graphY + 18);
+      ctx.fillStyle = "#d11141";
+      ctx.fillText("Envelope", graphX + 170, graphY + 18);
+
+      const markerX = graphX;
+      const currentY = graphY + graphH / 2 - current.combined * (graphH * 0.35);
+      ctx.fillStyle = "#3b4cc0";
+      ctx.beginPath();
+      ctx.arc(markerX, currentY, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#d11141";
+      const envY = graphY + graphH / 2 - current.envelope * (graphH * 0.35);
+      ctx.beginPath();
+      ctx.arc(markerX, envY, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      time += dt;
+      requestAnimationFrame(animate);
+    }
+
+    function init() {
+      updateReadouts();
+      resizeCanvas();
+      freq1Range.addEventListener("input", updateReadouts);
+      freq2Range.addEventListener("input", updateReadouts);
+      amplitudeRange.addEventListener("input", updateReadouts);
+      speedRange.addEventListener("input", updateReadouts);
+      window.addEventListener("resize", resizeCanvas);
+      animate();
+    }
+
+    init();
+  </script>
+</body>
+</html>

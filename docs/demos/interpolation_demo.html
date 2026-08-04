@@ -293,19 +293,6 @@
         "stroke-width": "2.2"
       }));
 
-      const pointData = points.map((p) => {
-        const px = graphX + (p.x / xMax) * graphW;
-        const py = graphY + graphH - (p.y / 1.0) * graphH;
-        return `${px.toFixed(2)},${py.toFixed(2)}`;
-      }).join(" ");
-
-      plot.appendChild(createSvgEl("polyline", {
-        points: pointData,
-        fill: "none",
-        stroke: plotColors.secondary,
-        "stroke-width": "1.2"
-      }));
-
       points.forEach((p) => {
         const px = graphX + (p.x / xMax) * graphW;
         const py = graphY + graphH - (p.y / 1.0) * graphH;

@@ -175,11 +175,6 @@
         </select>
       </div>
 
-      <div class="control">
-        <label for="gainInput">Forsterkning g</label>
-        <input id="gainInput" type="number" step="0.1" value="1" />
-      </div>
-
       <div class="control control-conjugate">
         <label>Konjugatpar</label>
         <label class="check-wrap">
@@ -237,7 +232,6 @@
   const EPS = 1e-9;
 
   const modeSelect = document.getElementById("modeSelect");
-  const gainInput = document.getElementById("gainInput");
   const conjToggle = document.getElementById("conjToggle");
   const removeSelectedBtn = document.getElementById("removeSelectedBtn");
   const presetLowBtn = document.getElementById("presetLowBtn");
@@ -252,7 +246,6 @@
     zeros: [],
     poles: [],
     mode: "add-zero",
-    gain: 1,
     addConjugate: true,
     selected: null,
     dragging: false,
@@ -504,7 +497,7 @@
       const wi = (Math.PI * i) / N;
       const z = c(Math.cos(wi), Math.sin(wi));
 
-      let num = c(state.gain, 0);
+      let num = c(1, 0);
       for (const z0 of state.zeros) {
         num = cMul(num, cSub(z, z0));
       }
@@ -681,12 +674,6 @@
   modeSelect.addEventListener("change", () => {
     state.mode = modeSelect.value;
     pzCanvas.style.cursor = state.mode === "delete" ? "not-allowed" : "crosshair";
-  });
-
-  gainInput.addEventListener("input", () => {
-    const v = Number(gainInput.value);
-    state.gain = Number.isFinite(v) ? v : 1;
-    redrawAll();
   });
 
   conjToggle.addEventListener("change", () => {

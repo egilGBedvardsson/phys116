@@ -12,7 +12,7 @@ From the repository root:
 python3 -m http.server 8123
 ```
 
-Open `http://127.0.0.1:8123/docs/`.
+Open `http://127.0.0.1:8123/`.
 
 Most pages can be opened directly from disk, but a local server is the best way to test portal iframe behavior, relative paths, and GitHub Pages-style routing.
 

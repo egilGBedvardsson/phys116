@@ -9,7 +9,21 @@
   <meta http-equiv="refresh" content="0; url=./docs/">
 
   <script>
-    window.location.replace("./docs/");
+    const target =
+      new URL(
+        "./docs/",
+        window.location.href
+      );
+
+    target.search =
+      window.location.search;
+
+    target.hash =
+      window.location.hash;
+
+    window.location.replace(
+      target.href
+    );
   </script>
 </head>
 

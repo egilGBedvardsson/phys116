@@ -7,15 +7,52 @@
   <title>PHYS 116 · Demoportal</title>
 
   <script>
-    /*
-     * Relative paths break if GitHub Pages serves this page as /docs
-     * instead of /docs/. Normalize the URL before loading assets.
-     */
-    if (window.location.pathname.endsWith("/docs")) {
-      window.location.replace(
-        `${window.location.pathname}/${window.location.search}${window.location.hash}`
-      );
-    }
+    (() => {
+      /*
+       * Relative paths break if GitHub Pages serves this page as /docs
+       * instead of /docs/. Normalize the URL before loading assets.
+       */
+      if (window.location.pathname.endsWith("/docs")) {
+        window.location.replace(
+          `${window.location.pathname}/${window.location.search}${window.location.hash}`
+        );
+
+        return;
+      }
+
+      /*
+       * In local/repository-root use, index.html forwards into docs/ so the
+       * static files can load. Hide that implementation directory from the
+       * visible URL while keeping this document's relative asset base pinned
+       * to the real docs/ directory.
+       */
+      if (window.location.pathname.endsWith("/docs/")) {
+        const assetBase =
+          document.createElement("base");
+
+        assetBase.href =
+          window.location.href.replace(
+            /([?#].*)?$/,
+            ""
+          );
+
+        document.head.appendChild(
+          assetBase
+        );
+
+        const publicPath =
+          window.location.pathname.replace(
+            /\/docs\/$/,
+            "/"
+          );
+
+        window.history.replaceState(
+          null,
+          "",
+          `${publicPath}${window.location.search}${window.location.hash}`
+        );
+      }
+    })();
   </script>
 
   <link rel="stylesheet" href="./assets/css/design.css">

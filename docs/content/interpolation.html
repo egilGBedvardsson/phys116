@@ -1,50 +1,7 @@
 <p>
-  Denne demoen viser hvordan verdier mellom kjente sample-punkter kan beregnes
-  med ulike interpoleringsmetoder. Sample-punktene kommer fra et kontinuerlig
-  signal, og den interpolerte kurven forsøker å rekonstruere verdiene mellom
-  disse punktene.
+  Denne demoen viser hvordan verdier mellom sample-punkter kan beregnes med ulike interpoleringsmetoder.
 </p>
 
 <p>
-  Du kan velge mellom blant annet nærmeste-nabo, trekant interpolasjon,
-  cosinus-interpolasjon og sinc-interpolasjon. Metodene skiller seg fra
-  hverandre ved hvordan hvert sample-punkt påvirker verdien i området rundt
-  seg. Dette kan beskrives som en vektet sum
-</p>
-
-<p class="doc-eq">\[
-\hat{x}(t)
-=
-\sum_n x[n]\,w_n(t),
-\]</p>
-
-<p>
-  der \(x[n]\) er sample-verdiene og \(w_n(t)\) er vektfunksjonen som hører
-  til den valgte interpoleringsmetoden. De svake kurvene i figuren viser
-  bidraget fra hvert enkelt sample, mens den tydelige kurven viser summen av
-  alle bidragene.
-</p>
-
-<p>
-  Den vertikale markøren \(t^\ast\) kan flyttes langs figuren. Ved denne
-  posisjonen vises hvordan de enkelte bidragene summeres til den interpolerte
-  verdien. Dette gjør det mulig å sammenligne metodene både geometrisk og
-  direkte gjennom selve beregningen.
-</p>
-
-<p>
-  For nærmeste-nabo bestemmes verdien av det nærmeste sample-punktet.
-  Lineær interpolasjon bruker trekantformede vekter mellom nabosamples,
-  mens cosinus-interpolasjon gir en mykere overgang mellom dem.
-  Sinc-interpolasjon bruker forskjøvede sinc-funksjoner som strekker seg over
-  flere sample-punkter.
-</p>
-
-<p>
-  Sinc-interpolasjon har en spesiell rolle i signalbehandling. For et ideelt
-  båndbegrenset signal som samples raskt nok i henhold til samplingsteoremet,
-  kan det kontinuerlige signalet rekonstrueres fra sample-verdiene ved hjelp
-  av sinc-funksjoner. Demoen viser derfor ikke bare ulike måter å tegne en
-  jevn kurve mellom punkter på, men også hvordan interpolasjon kan forstås som
-  rekonstruksjon av et samplet signal.
+  Velg metode og flytt markøren \(t^\ast\) for å se hvordan bidragene fra sample-punktene summeres til en interpolert verdi.
 </p>

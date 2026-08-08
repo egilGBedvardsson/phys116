@@ -22,7 +22,7 @@ const DEMOS = {
   },
 
   nyquist: {
-    title: "Sampling, Nyquist og folding",
+    title: "Sampling, Nyquist og aliasing",
     path: "PHYS 116 / Demoer / Nyquist Chirp",
     demo: "./demos/nyquist_chirp.html",
     document: "./content/nyquist.html"
@@ -67,7 +67,7 @@ const DEMOS = {
   },
 
   interpolation: {
-    title: "Interpolasjon mellom punkter",
+    title: "Interpolasjon",
     path: "PHYS 116 / Demoer / Interpolasjon",
     demo: "./demos/interpolation.html",
     document: "./content/interpolation.html"
@@ -344,11 +344,7 @@ function getElementBottom(element) {
   const rect =
     element.getBoundingClientRect();
 
-  return Math.max(
-    rect.bottom,
-    element.scrollHeight,
-    element.offsetHeight
-  );
+  return rect.bottom;
 }
 
 function measureFrameDocumentHeight() {
@@ -469,14 +465,6 @@ function connectFrameAutoHeight() {
     return;
   }
 
-  frameDocument.documentElement.classList.add(
-    "demo-embedded"
-  );
-
-  frameDocument.body?.classList.add(
-    "demo-embedded"
-  );
-
   scheduleSettledFrameMeasurements();
 
   if (
@@ -530,46 +518,8 @@ function connectFrameAutoHeight() {
   scheduleFrameHeightMeasure();
 }
 
-function handleFrameWheel(event) {
-  if (
-    event.defaultPrevented ||
-    event.ctrlKey
-  ) {
-    return;
-  }
-
-  const scale =
-    event.deltaMode === WheelEvent.DOM_DELTA_LINE
-      ? 16
-      : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
-        ? window.innerHeight
-        : 1;
-
-  event.preventDefault();
-
-  window.scrollBy({
-    left: event.deltaX * scale,
-    top: event.deltaY * scale,
-    behavior: "auto"
-  });
-}
-
-function connectFrameWheelForwarding() {
-  const frameDocument =
-    getFrameDocument();
-
-  frameDocument?.addEventListener(
-    "wheel",
-    handleFrameWheel,
-    {
-      passive: false
-    }
-  );
-}
-
 function handleFrameLoad() {
   connectFrameAutoHeight();
-  connectFrameWheelForwarding();
 
   elements.frame.contentWindow?.addEventListener(
     "resize",

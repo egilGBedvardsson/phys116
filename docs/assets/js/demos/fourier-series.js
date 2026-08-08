@@ -6,13 +6,13 @@ const MAX_WAVEFORM_POINTS = 760;
 const BASE_ANGULAR_SPEED = 1;
 
 const LAYOUT = {
-  originX: 0.28,
-  originY: 0.47,
-  graphX: 0.52,
-  graphRightPadding: 24,
-  graphTop: 14,
-  graphBottomPadding: 30,
-  baseRadiusScale: 0.18
+  originX: 0.25,
+  originY: 0.50,
+  graphX: 0.47,
+  graphRightPadding: 18,
+  graphTop: 10,
+  graphBottomPadding: 22,
+  baseRadiusScale: 0.21
 };
 
 // -----------------------------------------------------------------------------
@@ -70,8 +70,6 @@ const state = {
 
   waveform: []
 };
-
-let stopResizeObserver = null;
 
 // -----------------------------------------------------------------------------
 // UI
@@ -562,11 +560,10 @@ function init() {
     updateReadouts
     );
 
-  stopResizeObserver =
-    DemoUtils.observeResize(
-      plot,
-      resizeCanvas
-    );
+  DemoUtils.observeResize(
+    plot,
+    resizeCanvas
+  );
 
   requestAnimationFrame(animate);
 }

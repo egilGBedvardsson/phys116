@@ -91,8 +91,6 @@ const state = {
   buffer: []
 };
 
-let stopResizeObserver = null;
-
 // -----------------------------------------------------------------------------
 // UI
 // -----------------------------------------------------------------------------
@@ -557,11 +555,10 @@ function init() {
     );
   }
 
-  stopResizeObserver =
-    DemoUtils.observeResize(
-      plot,
-      resizeCanvas
-    );
+  DemoUtils.observeResize(
+    plot,
+    resizeCanvas
+  );
 
   requestAnimationFrame(
     animate

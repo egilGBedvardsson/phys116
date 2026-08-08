@@ -58,9 +58,24 @@
 
 canvas {
   width: 100%;
-  height: auto;
 }
 
 #outputCanvas {
-  min-height: 360px;
+  height: 360px;
+}
+
+#impulseCanvas,
+#responseCanvas {
+  height: 220px;
+}
+
+@media (max-width: 640px) {
+  #outputCanvas {
+    height: 320px;
+  }
+
+  #impulseCanvas,
+  #responseCanvas {
+    height: 200px;
+  }
 }

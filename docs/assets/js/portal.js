@@ -150,6 +150,13 @@ function withAssetVersion(path) {
   );
 }
 
+function resolveAssetUrl(path) {
+  return new URL(
+    path,
+    document.baseURI
+  ).href;
+}
+
 function getDemoKeyFromHash() {
   const params =
     new URLSearchParams(
@@ -245,8 +252,10 @@ async function renderDocument(key) {
     try {
       const response =
         await fetch(
-          withAssetVersion(
-            documentPath
+          resolveAssetUrl(
+            withAssetVersion(
+              documentPath
+            )
           )
         );
 
@@ -576,8 +585,10 @@ function setActiveNavigation(key) {
 
 function showDemo(demo) {
   const source =
-    withAssetVersion(
-      demo.demo
+    resolveAssetUrl(
+      withAssetVersion(
+        demo.demo
+      )
     );
 
   elements.frame.style.display =

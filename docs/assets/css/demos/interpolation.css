@@ -1,11 +1,5 @@
 :root {
-  --line: var(--plot-grid);
   --panel: var(--color-surface-bg);
-}
-
-body.demo-page {
-  background: var(--color-page-bg);
-  color: var(--color-text-primary);
 }
 
 #controls {
@@ -31,13 +25,9 @@ select {
 
   padding: 8px 10px;
 
-  border: 1px solid var(--plot-axis);
   border-radius: 8px;
 
   background: var(--panel);
-  color: var(--color-text-primary);
-
-  font: inherit;
 }
 
 #plot {
@@ -51,7 +41,7 @@ select {
   min-height: 420px;
   margin-top: 8px;
 
-  border: 1px solid var(--line);
+  border: 1px solid var(--border-subtle);
   background: var(--plot-bg);
 }
 

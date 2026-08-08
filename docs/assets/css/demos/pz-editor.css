@@ -1,16 +1,19 @@
 #page {
-  box-sizing: border-box;
+  width: min(100%, var(--demo-wide-max-width));
 }
 
 #controls {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 
-  padding: 8px 0 12px;
+  padding:
+    8px
+    var(--demo-control-inset)
+    12px;
   margin-bottom: 10px;
 
   border-top: 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .control {
@@ -25,26 +28,8 @@
 
 select,
 button {
-  height: 32px;
-  box-sizing: border-box;
-
-  padding: 4px 8px;
-
-  border: 1px solid #bfbfbf;
-  background: var(--theme-surface-bg, #ffffff);
-  color: var(--color-text-primary, #111111);
-
-  font-family: inherit;
-  font-size: 14px;
+  height: var(--control-height);
   line-height: 1.2;
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  background: #f5f5f5;
 }
 
 .check-wrap {
@@ -52,7 +37,7 @@ button:hover {
   align-items: center;
   gap: 8px;
 
-  height: 32px;
+  height: var(--control-height);
   padding-left: 0;
 
   font-size: 14px;
@@ -106,8 +91,8 @@ button:hover {
 
   padding: 8px;
 
-  border: 1px solid var(--line);
-  background: var(--theme-surface-bg, #ffffff);
+  border: 1px solid var(--border-subtle);
+  background: var(--plot-bg);
 }
 
 .panel h3 {
@@ -128,7 +113,7 @@ button:hover {
   cursor: crosshair;
   touch-action: none;
 
-  background: var(--theme-surface-bg, #ffffff);
+  background: var(--plot-bg);
 }
 
 
@@ -155,8 +140,8 @@ button:hover {
   min-height: 0;
   padding: 6px;
 
-  border: 1px solid var(--line);
-  background: var(--theme-surface-bg, #ffffff);
+  border: 1px solid var(--border-subtle);
+  background: var(--plot-bg);
 }
 
 .plot-wrap h4 {
@@ -179,7 +164,7 @@ button:hover {
 
   border: 0;
 
-  background: var(--theme-surface-bg, #ffffff);
+  background: var(--plot-bg);
 }
 
 

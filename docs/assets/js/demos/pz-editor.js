@@ -94,6 +94,9 @@
     )
   };
 
+  const clamp =
+    DemoUtils.clamp;
+
 
   // ---------------------------------------------------------------------------
   // State
@@ -112,18 +115,6 @@
     nextId: 1,
     nextPairId: 1
   };
-
-
-  // ---------------------------------------------------------------------------
-  // General helpers
-  // ---------------------------------------------------------------------------
-
-  function clamp(value, min, max) {
-    return Math.max(
-      min,
-      Math.min(max, value)
-    );
-  }
 
 
   // ---------------------------------------------------------------------------
@@ -198,66 +189,37 @@
   // ---------------------------------------------------------------------------
 
   function prepareCanvas(canvas) {
-    const rect =
-      canvas.getBoundingClientRect();
-
-    const dpr =
-      window.devicePixelRatio || 1;
-
-    canvas.width =
-      Math.max(
-        1,
-        Math.round(
-          rect.width * dpr
-        )
+    const size =
+      DemoUtils.prepareCanvas(
+        canvas
       );
-
-    canvas.height =
-      Math.max(
-        1,
-        Math.round(
-          rect.height * dpr
-        )
-      );
-
-    const context =
-      canvas.getContext("2d");
-
-    context.setTransform(
-      dpr,
-      0,
-      0,
-      dpr,
-      0,
-      0
-    );
 
     return {
-      ctx: context,
-      width: rect.width,
-      height: rect.height
+      ctx: size.ctx,
+      width: size.width,
+      height: size.height
     };
   }
 
 
   function formatComplexPoint(point) {
     const real =
-        point.re.toFixed(3);
+      point.re.toFixed(3);
 
     const imaginary =
-        Math.abs(
+      Math.abs(
         point.im
-        ).toFixed(3);
+      ).toFixed(3);
 
     const sign =
-        point.im >= 0
+      point.im >= 0
         ? "+"
         : "−";
 
     return (
-        `${real} ${sign} j${imaginary}`
+      `${real} ${sign} j${imaginary}`
     );
-    }
+  }
 
   // ---------------------------------------------------------------------------
   // z-plane coordinate mapping
@@ -1446,7 +1408,6 @@ function updateStatus() {
     }
   }
 
-handlePointerDown
   status.innerHTML =
     `Nuller: <b>${state.zeros.length}</b> &nbsp;|&nbsp; ` +
     `Poler: <b>${state.poles.length}</b> &nbsp;|&nbsp; ` +

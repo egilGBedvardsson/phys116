@@ -36,25 +36,12 @@ const readouts = {
 // -----------------------------------------------------------------------------
 
 const plotColors = {
-  background: DemoUtils.cssVar(
-    "--theme-surface-bg",
-    "#ffffff"
-  ),
-
-  axis: DemoUtils.cssVar(
-    "--plot-axis",
-    "#b8b8b8"
-  ),
-
-  text: DemoUtils.cssVar(
-    "--plot-text",
-    "#111111"
-  ),
-
-  secondary: DemoUtils.cssVar(
-    "--plot-secondary",
-    "#d11141"
-  )
+  ...DemoUtils.cssVars({
+    background: ["--plot-bg", "#ffffff"],
+    axis: ["--plot-axis", "#b8b8b8"],
+    text: ["--plot-text", "#111111"],
+    secondary: ["--plot-secondary", "#d11141"]
+  })
 };
 
 
@@ -435,11 +422,8 @@ function computeSpectrogram(
 
 function measurePlotWidth() {
   const measuredWidth =
-    Math.max(
-      320,
-      Math.floor(
-        plot.clientWidth
-      )
+    DemoUtils.measureElementWidth(
+      plot
     );
 
   if (measuredWidth > 0) {
@@ -776,7 +760,8 @@ function renderPlot({
     traces,
     layout,
     {
-      responsive: false
+      responsive: false,
+      scrollZoom: false
     }
   );
 }
@@ -806,8 +791,10 @@ function init() {
     }
   );
 
-  renderPlot({
-    remeasureWidth: true
+  DemoUtils.runAfterLayoutSettles(() => {
+    renderPlot({
+      remeasureWidth: true
+    });
   });
 }
 

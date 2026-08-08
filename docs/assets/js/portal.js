@@ -119,7 +119,10 @@ const elements = {
 // -----------------------------------------------------------------------------
 
 const state = {
-  frameResizeObserver: null,
+  frameResizeObservers: [],
+  frameMutationObserver: null,
+  frameHeightFrame: 0,
+  frameHeightTimers: [],
   lastFrameHeight: 0,
 
   documentLoadToken: 0,
@@ -291,70 +294,168 @@ async function renderDocument(key) {
 // -----------------------------------------------------------------------------
 
 function disconnectFrameObserver() {
+  for (
+    const observer of
+      state.frameResizeObservers
+  ) {
+    observer.disconnect();
+  }
+
+  state.frameResizeObservers = [];
+
+  state.frameMutationObserver?.disconnect();
+  state.frameMutationObserver = null;
+
+  if (state.frameHeightFrame) {
+    cancelAnimationFrame(
+      state.frameHeightFrame
+    );
+
+    state.frameHeightFrame = 0;
+  }
+
+  for (
+    const timer of
+      state.frameHeightTimers
+  ) {
+    clearTimeout(timer);
+  }
+
+  state.frameHeightTimers = [];
+}
+
+function getFrameDocument() {
+  try {
+    return (
+      elements.frame.contentDocument ||
+      elements.frame.contentWindow?.document ||
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
+function getElementBottom(element) {
+  if (!element) {
+    return 0;
+  }
+
+  const rect =
+    element.getBoundingClientRect();
+
+  return Math.max(
+    rect.bottom,
+    element.scrollHeight,
+    element.offsetHeight
+  );
+}
+
+function measureFrameDocumentHeight() {
+  const frameDocument =
+    getFrameDocument();
+
+  if (!frameDocument) {
+    return 0;
+  }
+
+  const body =
+    frameDocument.body;
+
+  const html =
+    frameDocument.documentElement;
+
+  const demoShell =
+    frameDocument.querySelector(
+      ".demo-shell"
+    );
+
+  const contentBottoms =
+    Array.from(
+      body?.children || []
+    ).map(getElementBottom);
+
+  const contentHeight =
+    Math.max(
+      getElementBottom(demoShell),
+      ...contentBottoms
+    );
+
+  if (contentHeight > 0) {
+    return Math.ceil(contentHeight);
+  }
+
+  return Math.ceil(
+    Math.max(
+      getElementBottom(body),
+      getElementBottom(html),
+      body?.scrollHeight || 0,
+      html?.scrollHeight || 0
+    )
+  );
+}
+
+function measureFrameHeight() {
+  const nextHeight =
+    measureFrameDocumentHeight();
+
   if (
-    !state.frameResizeObserver
+    nextHeight <= 0 ||
+    Math.abs(
+      nextHeight -
+      state.lastFrameHeight
+    ) <= 1
   ) {
     return;
   }
 
-  state.frameResizeObserver.disconnect();
-  state.frameResizeObserver = null;
+  elements.frame.style.height =
+    `${nextHeight}px`;
+
+  state.lastFrameHeight =
+    nextHeight;
 }
 
-function measureFrameHeight() {
-  try {
-    const frameDocument =
-      elements.frame.contentDocument;
+function scheduleFrameHeightMeasure() {
+  if (state.frameHeightFrame) {
+    return;
+  }
 
-    if (!frameDocument) {
-      return;
-    }
+  state.frameHeightFrame =
+    requestAnimationFrame(() => {
+      state.frameHeightFrame = 0;
+      measureFrameHeight();
+    });
+}
 
-    const demoShell =
-      frameDocument.querySelector(
-        ".demo-shell"
-      );
+function queueFrameHeightMeasure(delay) {
+  const timer =
+    setTimeout(() => {
+      state.frameHeightTimers =
+        state.frameHeightTimers.filter(
+          value => value !== timer
+        );
 
-    const body =
-      frameDocument.body;
+      scheduleFrameHeightMeasure();
+    }, delay);
 
-    const html =
-      frameDocument.documentElement;
+  state.frameHeightTimers.push(
+    timer
+  );
+}
 
-    const nextHeight =
-      Math.ceil(
-        demoShell
-          ? demoShell
-              .getBoundingClientRect()
-              .height
+function scheduleSettledFrameMeasurements() {
+  const delays = [
+    0,
+    50,
+    120,
+    300,
+    700,
+    1200
+  ];
 
-          : Math.max(
-              body?.scrollHeight || 0,
-              html?.scrollHeight || 0
-            )
-      );
-
-    if (
-      nextHeight <= 0 ||
-      Math.abs(
-        nextHeight -
-        state.lastFrameHeight
-      ) <= 2
-    ) {
-      return;
-    }
-
-    elements.frame.style.height =
-      `${nextHeight}px`;
-
-    state.lastFrameHeight =
-      nextHeight;
-
-  } catch {
-    /*
-     * All project demos are expected to be same-origin.
-     * Ignore sizing if that ever stops being true.
-     */
+  for (const delay of delays) {
+    queueFrameHeightMeasure(delay);
   }
 }
 
@@ -362,53 +463,129 @@ function connectFrameAutoHeight() {
   disconnectFrameObserver();
 
   const frameDocument =
-    elements.frame.contentDocument;
+    getFrameDocument();
 
   if (!frameDocument) {
     return;
   }
 
-  measureFrameHeight();
-
-  requestAnimationFrame(
-    measureFrameHeight
+  frameDocument.documentElement.classList.add(
+    "demo-embedded"
   );
 
-  setTimeout(
-    measureFrameHeight,
-    120
+  frameDocument.body?.classList.add(
+    "demo-embedded"
   );
 
-  setTimeout(
-    measureFrameHeight,
-    420
-  );
+  scheduleSettledFrameMeasurements();
 
   if (
-    !("ResizeObserver" in window)
+    "ResizeObserver" in window
+  ) {
+    const targets = [
+      frameDocument.documentElement,
+      frameDocument.body,
+      frameDocument.querySelector(
+        ".demo-shell"
+      )
+    ].filter(Boolean);
+
+    for (const target of targets) {
+      const observer =
+        new ResizeObserver(
+          scheduleFrameHeightMeasure
+        );
+
+      observer.observe(target);
+
+      state.frameResizeObservers.push(
+        observer
+      );
+    }
+  }
+
+  if (
+    "MutationObserver" in window &&
+    frameDocument.body
+  ) {
+    state.frameMutationObserver =
+      new MutationObserver(
+        scheduleFrameHeightMeasure
+      );
+
+    state.frameMutationObserver.observe(
+      frameDocument.body,
+      {
+        attributes: true,
+        childList: true,
+        subtree: true
+      }
+    );
+  }
+
+  frameDocument.fonts?.ready
+    ?.then(scheduleFrameHeightMeasure)
+    .catch(() => {});
+
+  scheduleFrameHeightMeasure();
+}
+
+function handleFrameWheel(event) {
+  if (
+    event.defaultPrevented ||
+    event.ctrlKey
   ) {
     return;
   }
 
-  const target =
-    frameDocument.querySelector(
-      ".demo-shell"
-    ) ||
-    frameDocument.body ||
-    frameDocument.documentElement;
+  const scale =
+    event.deltaMode === WheelEvent.DOM_DELTA_LINE
+      ? 16
+      : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+        ? window.innerHeight
+        : 1;
 
-  if (!target) {
-    return;
-  }
+  event.preventDefault();
 
-  state.frameResizeObserver =
-    new ResizeObserver(
-      measureFrameHeight
-    );
+  window.scrollBy({
+    left: event.deltaX * scale,
+    top: event.deltaY * scale,
+    behavior: "auto"
+  });
+}
 
-  state.frameResizeObserver.observe(
-    target
+function connectFrameWheelForwarding() {
+  const frameDocument =
+    getFrameDocument();
+
+  frameDocument?.addEventListener(
+    "wheel",
+    handleFrameWheel,
+    {
+      passive: false
+    }
   );
+}
+
+function handleFrameLoad() {
+  connectFrameAutoHeight();
+  connectFrameWheelForwarding();
+
+  elements.frame.contentWindow?.addEventListener(
+    "resize",
+    scheduleFrameHeightMeasure,
+    {
+      passive: true
+    }
+  );
+}
+
+function updateFrameHeightOnWindowResize() {
+  scheduleFrameHeightMeasure();
+
+  for (const delay of [120, 360]) {
+    queueFrameHeightMeasure(delay);
+  }
 }
 
 
@@ -611,12 +788,12 @@ function connectEvents() {
 
   elements.frame.addEventListener(
     "load",
-    connectFrameAutoHeight
+    handleFrameLoad
   );
 
   window.addEventListener(
     "resize",
-    measureFrameHeight,
+    updateFrameHeightOnWindowResize,
     {
       passive: true
     }

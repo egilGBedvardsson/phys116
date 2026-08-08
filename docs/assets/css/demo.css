@@ -2,19 +2,43 @@
    Shared styles for interactive course demos
    ========================================================================== */
 
-:root {
-  --line: #d9d9d9;
-}
-
-
 /* --------------------------------------------------------------------------
    Demo shell
    -------------------------------------------------------------------------- */
+
+body.demo-page {
+  min-height: 100vh;
+  padding: var(--demo-outer-gutter);
+
+  background: var(--color-page-bg);
+  color: var(--color-text-primary);
+
+  font-family: var(--font-family-ui);
+}
+
+html.demo-embedded,
+html.demo-embedded body.demo-page {
+  min-height: 0;
+  overflow: hidden;
+}
+
+html.demo-embedded body.demo-page {
+  padding: 0;
+}
 
 .demo-shell {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  width: min(100%, var(--demo-max-width));
+  margin: 0 auto;
+}
+
+html.demo-embedded body.demo-page .demo-shell,
+html.demo-embedded body.demo-page #container,
+html.demo-embedded body.demo-page #page {
+  width: 100%;
+  margin: 0;
 }
 
 
@@ -26,12 +50,17 @@
   width: 100%;
   box-sizing: border-box;
 
-  padding: 18px 0 16px;
+  padding:
+    18px
+    var(--demo-control-inset)
+    16px;
 
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
 
   display: grid;
+  column-gap: var(--demo-control-column-gap);
+  row-gap: var(--demo-control-row-gap);
   align-items: end;
 }
 
@@ -58,6 +87,120 @@
   width: 100%;
 }
 
+select,
+button {
+  min-width: 0;
+  box-sizing: border-box;
+
+  border: 1px solid var(--border-control);
+  background: var(--control-bg);
+  color: var(--color-text-primary);
+
+  font: inherit;
+  font-size: var(--control-font-size);
+}
+
+select {
+  min-height: var(--control-height);
+  padding: 4px 8px;
+}
+
+button {
+  min-height: var(--control-height);
+  padding: 4px 10px;
+
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--control-hover-bg);
+}
+
+
+/* --------------------------------------------------------------------------
+   Slider
+   -------------------------------------------------------------------------- */
+
+.demo-page .slider {
+  width: 100%;
+  height: var(--slider-thumb-size);
+
+  margin: 0;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  background: transparent;
+  accent-color: var(--slider-thumb-color);
+
+  cursor: pointer;
+  outline: none;
+}
+
+.demo-page .slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: var(--slider-track-height);
+
+  border-radius:
+    calc(var(--slider-track-height) / 2);
+  background: var(--slider-track-color);
+}
+
+.demo-page .slider::-webkit-slider-thumb {
+  width: var(--slider-thumb-size);
+  height: var(--slider-thumb-size);
+
+  margin-top:
+    calc(
+      (
+        var(--slider-track-height) -
+        var(--slider-thumb-size)
+      ) / 2
+    );
+
+  border: 0;
+  border-radius: 50%;
+
+  background: var(--slider-thumb-color);
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  cursor: pointer;
+}
+
+.demo-page .slider::-moz-range-track {
+  width: 100%;
+  height: var(--slider-track-height);
+
+  border: 0;
+  border-radius:
+    calc(var(--slider-track-height) / 2);
+
+  background: var(--slider-track-color);
+}
+
+.demo-page .slider::-moz-range-progress {
+  height: var(--slider-track-height);
+
+  border-radius:
+    calc(var(--slider-track-height) / 2);
+
+  background: var(--slider-track-color);
+}
+
+.demo-page .slider::-moz-range-thumb {
+  width: var(--slider-thumb-size);
+  height: var(--slider-thumb-size);
+
+  border: 0;
+  border-radius: 50%;
+
+  background: var(--slider-thumb-color);
+
+  cursor: pointer;
+}
+
 
 /* --------------------------------------------------------------------------
    Canvas
@@ -66,23 +209,17 @@
 canvas {
   display: block;
 
-  border: 1px solid var(--line);
-  background: var(--theme-surface-bg, #ffffff);
+  border: 1px solid var(--border-subtle);
+  background: var(--plot-bg);
 }
 
-.demo-page #controls {
-  width: 100%;
-  box-sizing: border-box;
+@media (max-width: 640px) {
+  body.demo-page {
+    padding: var(--demo-padding-x-mobile);
+  }
 
-  padding: 18px 0 16px;
-
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-
-  display: grid;
-
-  column-gap: 24px;
-  row-gap: 16px;
-
-  align-items: end;
+  #controls {
+    padding-right: var(--demo-padding-x-mobile);
+    padding-left: var(--demo-padding-x-mobile);
+  }
 }

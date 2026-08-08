@@ -39,19 +39,21 @@ const readouts = {
 
 
 const plotColors = {
-  background: DemoUtils.cssVar("--theme-surface-bg", "#ffffff"),
-  axis: DemoUtils.cssVar("--plot-axis", "#b8b8b8"),
-  axisSoft: DemoUtils.cssVar("--plot-axis-soft", "#bbbbbb"),
-  axisMuted: DemoUtils.cssVar(
-    "--plot-axis-muted",
-    "rgba(34, 34, 34, 0.35)"
-  ),
-  primary: DemoUtils.cssVar("--plot-primary", "#3b4cc0"),
-  primaryFaded: DemoUtils.cssVar(
-    "--plot-primary-faded",
-    "rgba(59, 76, 192, 0.55)"
-  ),
-  secondary: DemoUtils.cssVar("--plot-secondary", "#d11141")
+  ...DemoUtils.cssVars({
+    background: ["--plot-bg", "#ffffff"],
+    axis: ["--plot-axis", "#b8b8b8"],
+    axisSoft: ["--plot-axis-soft", "#bbbbbb"],
+    axisMuted: [
+      "--plot-axis-muted",
+      "rgba(34, 34, 34, 0.35)"
+    ],
+    primary: ["--plot-primary", "#3b4cc0"],
+    primaryFaded: [
+      "--plot-primary-faded",
+      "rgba(59, 76, 192, 0.55)"
+    ],
+    secondary: ["--plot-secondary", "#d11141"]
+  })
 };
 
 // -----------------------------------------------------------------------------
@@ -69,7 +71,7 @@ const state = {
   waveform: []
 };
 
-let resizeObserver = null;
+let stopResizeObserver = null;
 
 // -----------------------------------------------------------------------------
 // UI
@@ -95,39 +97,15 @@ function getControlValues() {
 // -----------------------------------------------------------------------------
 
 function resizeCanvas() {
-  state.dpr =
-    window.devicePixelRatio || 1;
-
-  state.width =
-    plot.clientWidth;
-
-  state.height =
-    plot.clientHeight;
-
-  plot.width =
-    Math.max(
-      1,
-      Math.round(
-        state.width * state.dpr
-      )
+  const size =
+    DemoUtils.prepareCanvas(
+      plot,
+      ctx
     );
 
-  plot.height =
-    Math.max(
-      1,
-      Math.round(
-        state.height * state.dpr
-      )
-    );
-
-  ctx.setTransform(
-    state.dpr,
-    0,
-    0,
-    state.dpr,
-    0,
-    0
-  );
+  state.dpr = size.dpr;
+  state.width = size.width;
+  state.height = size.height;
 }
 
 function resetWaveform() {
@@ -401,10 +379,10 @@ function calculateEndpoint(coefficients, origin, speed) {
 
   for (const coefficient of coefficients) {
     const angle =
-    coefficient.frequency *
+      coefficient.frequency *
         state.time *
         speed +
-    coefficient.phase;
+      coefficient.phase;
 
     const nextX =
       x +
@@ -498,9 +476,9 @@ function draw(values) {
   const waveformValue =
     endpoint.y - origin.y;
 
-    addWaveformPoint(
+  addWaveformPoint(
     waveformValue
-    );
+  );
 
   drawGraphFrame(graph);
 
@@ -584,19 +562,11 @@ function init() {
     updateReadouts
     );
 
-  if ("ResizeObserver" in window) {
-    resizeObserver =
-      new ResizeObserver(
-        resizeCanvas
-      );
-
-    resizeObserver.observe(plot);
-  } else {
-    window.addEventListener(
-      "resize",
+  stopResizeObserver =
+    DemoUtils.observeResize(
+      plot,
       resizeCanvas
     );
-  }
 
   requestAnimationFrame(animate);
 }

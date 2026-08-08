@@ -69,6 +69,26 @@
 
 
   /* ------------------------------------------------------------------------
+     Shared borders and controls
+     ------------------------------------------------------------------------ */
+
+  --border-subtle: #d9d9d9;
+  --border-control: #bfbfbf;
+
+  --control-bg: var(--color-surface-bg);
+  --control-hover-bg: #f5f5f5;
+
+  --control-height: 32px;
+  --control-radius: 8px;
+  --control-font-size: 14px;
+
+  --slider-track-color: #cccccc;
+  --slider-thumb-color: #000000;
+  --slider-track-height: 6px;
+  --slider-thumb-size: 16px;
+
+
+  /* ------------------------------------------------------------------------
      Typography
      ------------------------------------------------------------------------ */
 
@@ -107,6 +127,17 @@
      ------------------------------------------------------------------------ */
 
   --demo-max-width: 1050px;
+  --demo-wide-max-width: 1220px;
+
+  --demo-outer-gutter:
+    clamp(12px, 2.4vw, 32px);
+
+  --demo-control-inset:
+    clamp(14px, 3.5vw, 44px);
+
+  --demo-section-gap: 12px;
+  --demo-control-column-gap: 24px;
+  --demo-control-row-gap: 16px;
 
   --demo-padding-x: 24px;
   --demo-padding-y: 16px;
@@ -174,15 +205,6 @@
   --floating-top-button-right: 20px;
   --floating-top-button-bottom: 20px;
 
-
-  /* ------------------------------------------------------------------------
-     Temporary compatibility
-
-     Some existing demo files still reference --theme-surface-bg.
-     Remove this once they all use --color-surface-bg or --plot-bg directly.
-     ------------------------------------------------------------------------ */
-
-  --theme-surface-bg: var(--color-surface-bg);
 }
 
 
@@ -738,6 +760,8 @@ body {
 
   min-height: 360px;
 
+  overflow: visible;
+
   background: var(--portal-stage-bg);
 }
 
@@ -782,6 +806,8 @@ body {
   height: 0;
 
   border: 0;
+
+  overflow: hidden;
 
   background: var(--color-surface-bg);
 }
@@ -968,94 +994,4 @@ body {
   max-width: 120px;
 
   object-fit: contain;
-}
-
-/* --------------------------------------------------------------------------
-   Slider
-   -------------------------------------------------------------------------- */
-
-.demo-page .slider {
-  width: 100%;
-  height: 16px;
-
-  margin: 0;
-
-  appearance: none;
-  -webkit-appearance: none;
-
-  background: transparent;
-  accent-color: #000000;
-
-  cursor: pointer;
-  outline: none;
-}
-
-
-/* Chrome / Edge / Safari track */
-
-.demo-page .slider::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 6px;
-
-  border-radius: 3px;
-  background: #cccccc;
-}
-
-
-/* Chrome / Edge / Safari thumb */
-
-.demo-page .slider::-webkit-slider-thumb {
-  width: 16px;
-  height: 16px;
-
-  margin-top: -5px;
-
-  border: 0;
-  border-radius: 50%;
-
-  background: #000000;
-
-  appearance: none;
-  -webkit-appearance: none;
-
-  cursor: pointer;
-}
-
-
-/* Firefox track */
-
-.demo-page .slider::-moz-range-track {
-  width: 100%;
-  height: 6px;
-
-  border: 0;
-  border-radius: 3px;
-
-  background: #cccccc;
-}
-
-
-/* Firefox progress portion */
-
-.demo-page .slider::-moz-range-progress {
-  height: 6px;
-
-  border-radius: 3px;
-
-  background: #cccccc;
-}
-
-
-/* Firefox thumb */
-
-.demo-page .slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-
-  border: 0;
-  border-radius: 50%;
-
-  background: #000000;
-
-  cursor: pointer;
 }

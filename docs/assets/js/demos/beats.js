@@ -64,12 +64,14 @@ const controls = {
 
 
 const plotColors = {
-  background: DemoUtils.cssVar("--theme-surface-bg", "#ffffff"),
-  axis: DemoUtils.cssVar("--plot-axis-soft", "#bbbbbb"),
-  text: DemoUtils.cssVar("--plot-text", "#111111"),
-  primary: DemoUtils.cssVar("--plot-primary", "#3b4cc0"),
-  secondary: DemoUtils.cssVar("--plot-secondary", "#d11141"),
-  signal: DemoUtils.cssVar("--plot-signal-muted", "#9b9b9e")
+  ...DemoUtils.cssVars({
+    background: ["--plot-bg", "#ffffff"],
+    axis: ["--plot-axis-soft", "#bbbbbb"],
+    text: ["--plot-text", "#111111"],
+    primary: ["--plot-primary", "#3b4cc0"],
+    secondary: ["--plot-secondary", "#d11141"],
+    signal: ["--plot-signal-muted", "#9b9b9e"]
+  })
 };
 
 // -----------------------------------------------------------------------------
@@ -89,7 +91,7 @@ const state = {
   buffer: []
 };
 
-let resizeObserver = null;
+let stopResizeObserver = null;
 
 // -----------------------------------------------------------------------------
 // UI
@@ -133,41 +135,15 @@ function getControlValues() {
 // -----------------------------------------------------------------------------
 
 function resizeCanvas() {
-  state.dpr =
-    window.devicePixelRatio || 1;
-
-  state.width =
-    plot.clientWidth;
-
-  state.height =
-    plot.clientHeight;
-
-  plot.width =
-    Math.max(
-      1,
-      Math.round(
-        state.width *
-        state.dpr
-      )
+  const size =
+    DemoUtils.prepareCanvas(
+      plot,
+      ctx
     );
 
-  plot.height =
-    Math.max(
-      1,
-      Math.round(
-        state.height *
-        state.dpr
-      )
-    );
-
-  ctx.setTransform(
-    state.dpr,
-    0,
-    0,
-    state.dpr,
-    0,
-    0
-  );
+  state.dpr = size.dpr;
+  state.width = size.width;
+  state.height = size.height;
 }
 
 function getGraphDimensions() {
@@ -581,22 +557,15 @@ function init() {
     );
   }
 
-  if ("ResizeObserver" in window) {
-    resizeObserver =
-      new ResizeObserver(resizeCanvas);
-
-    resizeObserver.observe(plot);
-  } else {
-    window.addEventListener(
-      "resize",
+  stopResizeObserver =
+    DemoUtils.observeResize(
+      plot,
       resizeCanvas
     );
-  }
 
   requestAnimationFrame(
-  animate
-);
+    animate
+  );
 }
 
 init();
-

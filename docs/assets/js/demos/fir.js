@@ -117,49 +117,22 @@ const responseCtx =
 // -----------------------------------------------------------------------------
 
 const plotColors = {
-  background:
-    DemoUtils.cssVar(
-      "--theme-surface-bg",
-      "#ffffff"
-    ),
-
-  grid:
-    DemoUtils.cssVar(
-      "--plot-grid",
-      "#e4e4e4"
-    ),
-
-  axis:
-    DemoUtils.cssVar(
-      "--plot-axis-soft",
-      "#bbbbbb"
-    ),
-
-  text:
-    DemoUtils.cssVar(
-      "--plot-text",
-      "#111111"
-    ),
-
-  muted:
-    DemoUtils.cssVar(
-      "--plot-muted",
-      "#666666"
-    )
+  ...DemoUtils.cssVars({
+    background: ["--plot-bg", "#ffffff"],
+    grid: ["--plot-grid", "#e4e4e4"],
+    axis: ["--plot-axis-soft", "#bbbbbb"],
+    text: ["--plot-text", "#111111"],
+    muted: ["--plot-muted", "#666666"]
+  })
 };
+
+const clamp =
+  DemoUtils.clamp;
 
 
 // -----------------------------------------------------------------------------
 // General math helpers
 // -----------------------------------------------------------------------------
-
-function clamp(value, min, max) {
-  return Math.min(
-    max,
-    Math.max(min, value)
-  );
-}
-
 
 function sinc(x) {
   if (Math.abs(x) < 1e-12) {
@@ -821,11 +794,17 @@ function clearCanvas(
   context,
   canvas
 ) {
+  const size =
+    DemoUtils.prepareCanvas(
+      canvas,
+      context
+    );
+
   context.clearRect(
     0,
     0,
-    canvas.width,
-    canvas.height
+    size.width,
+    size.height
   );
 
   context.fillStyle =
@@ -834,21 +813,23 @@ function clearCanvas(
   context.fillRect(
     0,
     0,
-    canvas.width,
-    canvas.height
+    size.width,
+    size.height
   );
+
+  return size;
 }
 
 
 function drawGrid(
   context,
-  canvas
+  size
 ) {
   const width =
-    canvas.width;
+    size.width;
 
   const height =
-    canvas.height;
+    size.height;
 
   context.strokeStyle =
     plotColors.grid;
@@ -981,25 +962,26 @@ function drawMainPlot(
   input,
   output
 ) {
-  clearCanvas(
-    outputCtx,
-    outputCanvas
-  );
+  const size =
+    clearCanvas(
+      outputCtx,
+      outputCanvas
+    );
 
   drawGrid(
     outputCtx,
-    outputCanvas
+    size
   );
 
   const width =
-    outputCanvas.width;
+    size.width;
 
   const height =
-    outputCanvas.height;
+    size.height;
 
   const denseCount =
     Math.max(
-      width,
+      Math.ceil(width),
       input.length
     );
 
@@ -1106,21 +1088,22 @@ function drawMainPlot(
 // -----------------------------------------------------------------------------
 
 function drawImpulse(kernel) {
-  clearCanvas(
-    impulseCtx,
-    impulseCanvas
-  );
+  const size =
+    clearCanvas(
+      impulseCtx,
+      impulseCanvas
+    );
 
   drawGrid(
     impulseCtx,
-    impulseCanvas
+    size
   );
 
   const width =
-    impulseCanvas.width;
+    size.width;
 
   const height =
-    impulseCanvas.height;
+    size.height;
 
   const maxAbs =
     Math.max(
@@ -1180,14 +1163,15 @@ function drawImpulse(kernel) {
 // -----------------------------------------------------------------------------
 
 function drawResponse(kernel) {
-  clearCanvas(
-    responseCtx,
-    responseCanvas
-  );
+  const size =
+    clearCanvas(
+      responseCtx,
+      responseCanvas
+    );
 
   drawGrid(
     responseCtx,
-    responseCanvas
+    size
   );
 
   const {
@@ -1212,10 +1196,10 @@ function drawResponse(kernel) {
   const maxDb = 6;
 
   const width =
-    responseCanvas.width;
+    size.width;
 
   const height =
-    responseCanvas.height;
+    size.height;
 
   responseCtx.strokeStyle =
     plotColors.text;

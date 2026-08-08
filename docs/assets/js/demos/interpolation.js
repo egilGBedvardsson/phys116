@@ -43,46 +43,20 @@ const methodSelect =
 // -----------------------------------------------------------------------------
 
 const plotColors = {
-  background: DemoUtils.cssVar(
-    "--plot-bg",
-    "#ffffff"
-  ),
-
-  grid: DemoUtils.cssVar(
-    "--plot-grid",
-    "#e4e4e4"
-  ),
-
-  axis: DemoUtils.cssVar(
-    "--plot-axis",
-    "#b8b8b8"
-  ),
-
-  text: DemoUtils.cssVar(
-    "--plot-text",
-    "#111111"
-  ),
-
-  muted: DemoUtils.cssVar(
-    "--plot-muted",
-    "#666666"
-  ),
-
-  primary: DemoUtils.cssVar(
-    "--plot-primary",
-    "#3b4cc0"
-  ),
-
-  secondary: DemoUtils.cssVar(
-    "--plot-secondary",
-    "#d11141"
-  ),
-
-  tertiary: DemoUtils.cssVar(
-    "--plot-tertiary",
-    "#488fa3"
-  )
+  ...DemoUtils.cssVars({
+    background: ["--plot-bg", "#ffffff"],
+    grid: ["--plot-grid", "#e4e4e4"],
+    axis: ["--plot-axis", "#b8b8b8"],
+    text: ["--plot-text", "#111111"],
+    muted: ["--plot-muted", "#666666"],
+    primary: ["--plot-primary", "#3b4cc0"],
+    secondary: ["--plot-secondary", "#d11141"],
+    tertiary: ["--plot-tertiary", "#488fa3"]
+  })
 };
+
+const clamp =
+  DemoUtils.clamp;
 
 
 // -----------------------------------------------------------------------------
@@ -874,14 +848,12 @@ function drawProbe(method) {
 }
 
 function clampProbeX(value) {
-  return Math.max(
+  return clamp(
+    value,
     samplePoints[0].x,
-    Math.min(
-      samplePoints[
-        samplePoints.length - 1
-      ].x,
-      value
-    )
+    samplePoints[
+      samplePoints.length - 1
+    ].x
   );
 }
 

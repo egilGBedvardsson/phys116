@@ -14,8 +14,8 @@
   min-height: 620px;
   margin-top: 12px;
 
-  border: 1px solid var(--line);
-  background: var(--theme-surface-bg, #ffffff);
+  border: 1px solid var(--border-subtle);
+  background: var(--plot-bg);
 }
 
 @media (max-width: 920px) {

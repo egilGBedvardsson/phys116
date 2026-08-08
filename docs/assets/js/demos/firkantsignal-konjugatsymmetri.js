@@ -33,30 +33,13 @@ const readouts = {
 // -----------------------------------------------------------------------------
 
 const plotColors = {
-  background: DemoUtils.cssVar(
-    "--plot-bg",
-    "#ffffff"
-  ),
-
-  axis: DemoUtils.cssVar(
-    "--plot-axis",
-    "#b8b8b8"
-  ),
-
-  text: DemoUtils.cssVar(
-    "--plot-text",
-    "#111111"
-  ),
-
-  primary: DemoUtils.cssVar(
-    "--plot-primary",
-    "#3b4cc0"
-  ),
-
-  secondary: DemoUtils.cssVar(
-    "--plot-secondary",
-    "#d11141"
-  )
+  ...DemoUtils.cssVars({
+    background: ["--plot-bg", "#ffffff"],
+    axis: ["--plot-axis", "#b8b8b8"],
+    text: ["--plot-text", "#111111"],
+    primary: ["--plot-primary", "#3b4cc0"],
+    secondary: ["--plot-secondary", "#d11141"]
+  })
 };
 
 
@@ -205,9 +188,8 @@ function computeSeries(phi, harmonicCount) {
 
 function measurePlotWidth() {
   const measuredWidth =
-    Math.max(
-      320,
-      Math.floor(plot.clientWidth)
+    DemoUtils.measureElementWidth(
+      plot
     );
 
   if (measuredWidth > 0) {
@@ -440,7 +422,8 @@ function renderPlot({
     traces,
     layout,
     {
-      responsive: false
+      responsive: false,
+      scrollZoom: false
     }
   );
 }
@@ -477,40 +460,11 @@ function init() {
     }
   );
 
-  /*
-   * This demo is commonly embedded in another page.
-   * A couple of delayed measurements ensure Plotly sees
-   * the final available width after the surrounding layout
-   * has settled.
-   */
-
-  renderPlot({
-    remeasureWidth: true
-  });
-
-  requestAnimationFrame(() => {
+  DemoUtils.runAfterLayoutSettles(() => {
     renderPlot({
       remeasureWidth: true
     });
   });
-
-  window.addEventListener(
-    "load",
-    () => {
-      renderPlot({
-        remeasureWidth: true
-      });
-    },
-    {
-      once: true
-    }
-  );
-
-  setTimeout(() => {
-    renderPlot({
-      remeasureWidth: true
-    });
-  }, 120);
 }
 
 init();

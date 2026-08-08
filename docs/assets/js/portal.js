@@ -22,8 +22,8 @@ const DEMOS = {
   },
 
   nyquist: {
-    title: "Sampling, Nyquist og aliasing",
-    path: "PHYS 116 / Demoer / Nyquist Chirp",
+    title: "Sampling og Nyquist",
+    path: "PHYS 116 / Demoer / Sampling og Nyquist",
     demo: "./demos/nyquist_chirp.html",
     document: "./content/nyquist.html"
   },
@@ -39,28 +39,28 @@ const DEMOS = {
   },
 
   fir: {
-    title: "Finite Impulse Response Filter",
-    path: "PHYS 116 / Demoer / FIR-filter",
+    title: "FIR-filtre",
+    path: "PHYS 116 / Demoer / FIR-filtre",
     demo: "./demos/fir.html",
     document: "./content/fir.html"
   },
 
   pz: {
-    title: "Poler, nuller og frekvensrespons",
-    path: "PHYS 116 / Demoer / Pol-null-editor",
+    title: "Poler og nuller",
+    path: "PHYS 116 / Demoer / Poler og nuller",
     demo: "./demos/pz_editor.html",
     document: "./content/pz.html"
   },
 
   fourier: {
-    title: "Interaktiv Fourier-serie",
-    path: "PHYS 116 / Demoer / Fourier-serie",
+    title: "Fourier-rekker",
+    path: "PHYS 116 / Demoer / Fourier-rekker",
     demo: "./demos/fourier_series.html",
     document: "./content/fourier_series.html"
   },
 
   beats: {
-    title: "Beats og interferens",
+    title: "Beats",
     path: "PHYS 116 / Demoer / Beats",
     demo: "./demos/beats.html",
     document: "./content/beats.html"

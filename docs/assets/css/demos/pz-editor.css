@@ -32,7 +32,6 @@ button {
 
   border: 1px solid #bfbfbf;
   background: var(--theme-surface-bg, #ffffff);
-
   color: var(--color-text-primary, #111111);
 
   font-family: inherit;
@@ -45,7 +44,7 @@ button {
 }
 
 button:hover {
-  background: var(--color-surface-bg, #f5f5f5);
+  background: #f5f5f5;
 }
 
 .check-wrap {
@@ -54,7 +53,6 @@ button:hover {
   gap: 8px;
 
   height: 32px;
-
   padding-left: 0;
 
   font-size: 14px;
@@ -80,15 +78,28 @@ button:hover {
   line-height: 1.35;
 }
 
+
+/* --------------------------------------------------------------------------
+   Main layout
+   -------------------------------------------------------------------------- */
+
 #layout {
   display: grid;
+
   grid-template-columns:
     minmax(300px, 0.95fr)
     minmax(420px, 1.05fr);
 
   gap: 12px;
-  align-items: start;
+
+  /* Both columns get the same total height. */
+  align-items: stretch;
 }
+
+
+/* --------------------------------------------------------------------------
+   Pole-zero panel
+   -------------------------------------------------------------------------- */
 
 .panel {
   box-sizing: border-box;
@@ -120,13 +131,28 @@ button:hover {
   background: var(--theme-surface-bg, #ffffff);
 }
 
+
+/* --------------------------------------------------------------------------
+   Magnitude / phase column
+   -------------------------------------------------------------------------- */
+
 #plots {
   display: grid;
-  grid-template-columns: 1fr;
+
+  /* Split the available height equally. */
+  grid-template-rows:
+    repeat(2, minmax(0, 1fr));
+
   gap: 10px;
+
+  min-height: 0;
 }
 
 .plot-wrap {
+  display: flex;
+  flex-direction: column;
+
+  min-height: 0;
   padding: 6px;
 
   border: 1px solid var(--line);
@@ -134,6 +160,8 @@ button:hover {
 }
 
 .plot-wrap h4 {
+  flex: 0 0 auto;
+
   margin: 0 0 6px;
 
   font-size: 14px;
@@ -143,26 +171,50 @@ button:hover {
 .plot-canvas {
   display: block;
 
+  flex: 1 1 0;
+
   width: 100%;
-  height: 220px;
+  height: 0;
+  min-height: 0;
 
   border: 0;
 
   background: var(--theme-surface-bg, #ffffff);
 }
 
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
 @media (max-width: 860px) {
   #controls {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
   }
 
   #layout {
     grid-template-columns: 1fr;
   }
+
+  /*
+    Once the panels stack vertically, they no longer need
+    to share the pole-zero panel's height.
+  */
+  #plots {
+    grid-template-rows: none;
+  }
+
+  .plot-canvas {
+    flex: none;
+
+    height: 220px;
+  }
 }
 
 @media (max-width: 700px) {
   #controls {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 }

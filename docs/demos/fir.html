@@ -15,199 +15,249 @@
 </head>
 
 <body class="demo-page">
-  <div id="page" class="demo-shell">
+ <section id="controls">
 
-    <section id="controls">
+  <!-- Signal ------------------------------------------------------------- -->
 
-      <div class="control">
+  <div class="control">
+    <div class="row">
+      <label for="signalType">Signal</label>
+    </div>
+
+    <select id="signalType">
+      <option value="tone">Tone</option>
+      <option value="twoTone" selected>To toner</option>
+      <option value="square">Firkant</option>
+      <option value="chirp">Chirp</option>
+      <option value="impulse">Impuls</option>
+      <option value="noise">Støy</option>
+    </select>
+  </div>
+
+
+  <div class="control">
+    <div class="row">
+      <label for="f1">Frekvens 1</label>
+      <span id="f1Val" class="value"></span>
+    </div>
+
+    <input
+      id="f1"
+      class="slider"
+      type="range"
+      min="5"
+      max="90"
+      step="1"
+      value="10"
+    >
+  </div>
+
+
+  <div class="control">
+    <div class="row">
+      <label for="f2">Frekvens 2</label>
+      <span id="f2Val" class="value"></span>
+    </div>
+
+    <input
+      id="f2"
+      class="slider"
+      type="range"
+      min="10"
+      max="110"
+      step="1"
+      value="50"
+    >
+  </div>
+
+
+  <div class="control">
+    <div class="row">
+      <label for="noise">Støy</label>
+      <span id="noiseVal" class="value"></span>
+    </div>
+
+    <input
+      id="noise"
+      class="slider"
+      type="range"
+      min="0"
+      max="0.6"
+      step="0.01"
+      value="0"
+    >
+  </div>
+
+
+  <!-- Filter ------------------------------------------------------------- -->
+
+  <div class="control">
+    <div class="row">
+      <label for="filterType">Filter</label>
+    </div>
+
+    <select id="filterType">
+      <option value="none">Ingen</option>
+      <option value="moving-average">Running average</option>
+      <option value="lowpass" selected>Lavpass</option>
+      <option value="highpass">Høypass</option>
+      <option value="bandpass">Båndpass</option>
+      <option value="notch">Notch</option>
+    </select>
+  </div>
+
+
+    <!-- Filter parameter ---------------------------------------------------- -->
+
+    <div id="filterParameterControl" class="control">
+
+      <!-- Low-pass / high-pass / notch -->
+
+      <div id="cutoffControl" class="filter-parameter">
         <div class="row">
-          <label for="signalType">Signal</label>
-          <span class="value"></span>
-        </div>
+          <label id="cutoffLabel" for="cutoff">
+            Grensefrekvens
+          </label>
 
-        <select id="signalType">
-          <option value="tone">Tone</option>
-          <option value="twoTone" selected>To toner</option>
-          <option value="square">Firkant</option>
-          <option value="chirp">Chirp</option>
-          <option value="impulse">Impuls</option>
-          <option value="noise">Støy</option>
-        </select>
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="f1">Frekvens 1</label>
-          <span id="f1Val" class="value"></span>
+          <span id="cutoffVal" class="value"></span>
         </div>
 
         <input
-          id="f1"
-          class="slider"
-          type="range"
-          min="4"
-          max="90"
-          step="1"
-          value="4"
-        >
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="f2">Frekvens 2</label>
-          <span id="f2Val" class="value"></span>
-        </div>
-
-        <input
-          id="f2"
-          class="slider"
-          type="range"
-          min="6"
-          max="110"
-          step="1"
-          value="50"
-        >
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="noise">Støy</label>
-          <span id="noiseVal" class="value"></span>
-        </div>
-
-        <input
-          id="noise"
-          class="slider"
-          type="range"
-          min="0"
-          max="0.8"
-          step="0.01"
-          value="0"
-        >
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="kernelLength">Kernel-lengde</label>
-          <span id="kernelLengthVal" class="value"></span>
-        </div>
-
-        <input
-          id="kernelLength"
+          id="cutoff"
           class="slider"
           type="range"
           min="5"
-          max="61"
+          max="100"
+          step="1"
+          value="25"
+        >
+      </div>
+
+
+      <!-- Band-pass -->
+
+      <div
+        id="bandControl"
+        class="filter-parameter"
+        hidden
+      >
+        <div class="row">
+          <label for="bandLow">
+            Båndpass
+          </label>
+
+          <span class="value">
+            <span id="bandLowVal"></span>–<span id="bandHighVal"></span>
+          </span>
+        </div>
+
+        <div class="band-sliders">
+          <input
+            id="bandLow"
+            class="slider"
+            type="range"
+            min="5"
+            max="90"
+            step="1"
+            value="20"
+            aria-label="Nedre grense"
+          >
+
+          <input
+            id="bandHigh"
+            class="slider"
+            type="range"
+            min="10"
+            max="110"
+            step="1"
+            value="60"
+            aria-label="Øvre grense"
+          >
+        </div>
+      </div>
+
+
+      <!-- Moving average -->
+
+      <div
+        id="movingAverageControl"
+        class="filter-parameter"
+        hidden
+      >
+        <div class="row">
+          <label for="movingAverageLength">
+            Vinduslengde
+          </label>
+
+          <span
+            id="movingAverageLengthVal"
+            class="value"
+          ></span>
+        </div>
+
+        <input
+          id="movingAverageLength"
+          class="slider"
+          type="range"
+          min="3"
+          max="31"
           step="2"
-          value="5"
+          value="9"
         >
       </div>
 
-      <div class="control">
-        <div class="row">
-          <label for="passes">Antall konvolusjoner</label>
-          <span id="passesVal" class="value"></span>
-        </div>
+    </div>
 
-        <input
-          id="passes"
-          class="slider"
-          type="range"
-          min="1"
-          max="4"
-          step="1"
-          value="1"
-        >
-      </div>
+  <!-- FIR parameters ----------------------------------------------------- -->
 
-      <div class="control">
-        <div class="row">
-          <label for="smooth">Running average</label>
-          <span id="smoothVal" class="value"></span>
-        </div>
+  <div class="control">
+    <div class="row">
+      <label for="kernelLength">
+        Kernel-lengde
+      </label>
 
-        <input
-          id="smooth"
-          class="slider"
-          type="range"
-          min="0"
-          max="100"
-          step="1"
-          value="0"
-        >
-      </div>
+      <span
+        id="kernelLengthVal"
+        class="value"
+      ></span>
+    </div>
 
-      <div class="control">
-        <div class="row">
-          <label for="low">Lavpass</label>
-          <span id="lowVal" class="value"></span>
-        </div>
+    <input
+      id="kernelLength"
+      class="slider"
+      type="range"
+      min="5"
+      max="81"
+      step="2"
+      value="31"
+    >
+  </div>
 
-        <input
-          id="low"
-          class="slider"
-          type="range"
-          min="0"
-          max="100"
-          step="1"
-          value="0"
-        >
-      </div>
 
-      <div class="control">
-        <div class="row">
-          <label for="high">Høypass</label>
-          <span id="highVal" class="value"></span>
-        </div>
+  <div class="control">
+    <div class="row">
+      <label for="passes">
+        Antall konvolusjoner
+      </label>
 
-        <input
-          id="high"
-          class="slider"
-          type="range"
-          min="0"
-          max="100"
-          step="1"
-          value="0"
-        >
-      </div>
+      <span
+        id="passesVal"
+        class="value"
+      ></span>
+    </div>
 
-      <div class="control">
-        <div class="row">
-          <label for="band">Båndpass</label>
-          <span id="bandVal" class="value"></span>
-        </div>
+    <input
+      id="passes"
+      class="slider"
+      type="range"
+      min="1"
+      max="3"
+      step="1"
+      value="1"
+    >
+  </div>
 
-        <input
-          id="band"
-          class="slider"
-          type="range"
-          min="0"
-          max="100"
-          step="1"
-          value="0"
-        >
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="notch">Notch-filter</label>
-          <span id="notchVal" class="value"></span>
-        </div>
-
-        <input
-          id="notch"
-          class="slider"
-          type="range"
-          min="0"
-          max="100"
-          step="1"
-          value="0"
-        >
-      </div>
-
-    </section>
-
-    <div id="summary"></div>
+</section>
 
     <section id="output">
 

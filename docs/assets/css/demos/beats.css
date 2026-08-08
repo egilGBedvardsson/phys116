@@ -1,11 +1,11 @@
 #controls {
-  grid-template-columns: repeat(4, minmax(170px, 1fr));
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
 }
 
 #plot {
   width: 100%;
-  min-height: 380px;
-  margin-top: 8px;
+  height: clamp(380px, 45vw, 460px);
 }
 
 @media (max-width: 860px) {

@@ -44,6 +44,9 @@ select {
   display: block;
   overflow: visible;
 
+  cursor: crosshair;
+  touch-action: none;
+
   width: 100%;
   min-height: 420px;
   margin-top: 8px;

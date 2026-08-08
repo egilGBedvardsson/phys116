@@ -13,64 +13,43 @@
 </head>
 
 <body class="demo-page">
-  <div id="container" class="demo-shell">
-
+      <div id="container" class="demo-shell">
     <section id="controls">
+
       <div class="control">
         <div class="row">
-          <label for="freq1Range">Frekvens 1</label>
-          <span id="freq1Val" class="value"></span>
+          <label for="deltaRange">
+            Frekvensforskjell Δf
+          </label>
+
+          <span
+            id="deltaVal"
+            class="value"
+          ></span>
         </div>
 
         <input
-          id="freq1Range"
+          id="deltaRange"
           class="slider"
           type="range"
-          min="1"
-          max="16"
-          step="0.5"
-          value="5"
+          min="0"
+          max="4"
+          step="0.1"
+          value="1"
         >
       </div>
 
-      <div class="control">
-        <div class="row">
-          <label for="freq2Range">Frekvens 2</label>
-          <span id="freq2Val" class="value"></span>
-        </div>
-
-        <input
-          id="freq2Range"
-          class="slider"
-          type="range"
-          min="1"
-          max="16"
-          step="0.5"
-          value="6"
-        >
-      </div>
 
       <div class="control">
         <div class="row">
-          <label for="amplitudeRange">Amplitude</label>
-          <span id="amplitudeVal" class="value"></span>
-        </div>
+          <label for="speedRange">
+            Hastighet
+          </label>
 
-        <input
-          id="amplitudeRange"
-          class="slider"
-          type="range"
-          min="0.2"
-          max="1"
-          step="0.05"
-          value="0.7"
-        >
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="speedRange">Hastighet</label>
-          <span id="speedVal" class="value"></span>
+          <span
+            id="speedVal"
+            class="value"
+          ></span>
         </div>
 
         <input
@@ -78,11 +57,12 @@
           class="slider"
           type="range"
           min="0.2"
-          max="3"
+          max="2"
           step="0.1"
           value="1"
         >
       </div>
+
     </section>
 
     <canvas id="plot"></canvas>

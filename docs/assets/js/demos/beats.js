@@ -5,8 +5,13 @@ const ctx = plot.getContext("2d");
 // Configuration
 // -----------------------------------------------------------------------------
 
-const MAX_POINTS = 720;
-const BASE_TIME_STEP = 0.015;
+const CENTER_FREQUENCY = 8;
+const AMPLITUDE = 0.7;
+
+const HISTORY_SAMPLE_STEP =
+  1 / 240;
+
+const MAX_POINTS = 960;
 
 const GRAPH = {
   paddingX: 20,
@@ -20,28 +25,36 @@ const GRAPH = {
 // -----------------------------------------------------------------------------
 
 const controls = {
-  freq1: {
-    input: document.getElementById("freq1Range"),
-    output: document.getElementById("freq1Val"),
-    format: value => `${value} Hz`
-  },
+  delta: {
+    input:
+      document.getElementById(
+        "deltaRange"
+      ),
 
-  freq2: {
-    input: document.getElementById("freq2Range"),
-    output: document.getElementById("freq2Val"),
-    format: value => `${value} Hz`
-  },
+    output:
+      document.getElementById(
+        "deltaVal"
+      ),
 
-  amplitude: {
-    input: document.getElementById("amplitudeRange"),
-    output: document.getElementById("amplitudeVal"),
-    format: value => Number(value).toFixed(2)
+    format:
+      value =>
+        `${Number(value).toFixed(1)} Hz`
   },
 
   speed: {
-    input: document.getElementById("speedRange"),
-    output: document.getElementById("speedVal"),
-    format: value => `${Number(value).toFixed(1)}x`
+    input:
+      document.getElementById(
+        "speedRange"
+      ),
+
+    output:
+      document.getElementById(
+        "speedVal"
+      ),
+
+    format:
+      value =>
+        `${Number(value).toFixed(1)}x`
   }
 };
 
@@ -66,8 +79,13 @@ const plotColors = {
 const state = {
   width: 0,
   height: 0,
-  dpr: window.devicePixelRatio || 1,
+  dpr:
+    window.devicePixelRatio || 1,
+
   time: 0,
+  previousTimestamp: null,
+  sampleAccumulator: 0,
+
   buffer: []
 };
 
@@ -84,11 +102,29 @@ function updateReadouts() {
 }
 
 function getControlValues() {
+  const delta =
+    Number(
+      controls.delta.input.value
+    );
+
   return {
-    freq1: Number(controls.freq1.input.value),
-    freq2: Number(controls.freq2.input.value),
-    amplitude: Number(controls.amplitude.input.value),
-    speed: Number(controls.speed.input.value)
+    delta,
+
+    freq1:
+      CENTER_FREQUENCY -
+      delta / 2,
+
+    freq2:
+      CENTER_FREQUENCY +
+      delta / 2,
+
+    amplitude:
+      AMPLITUDE,
+
+    speed:
+      Number(
+        controls.speed.input.value
+      )
   };
 }
 
@@ -97,21 +133,32 @@ function getControlValues() {
 // -----------------------------------------------------------------------------
 
 function resizeCanvas() {
-  state.dpr = window.devicePixelRatio || 1;
-  state.width = plot.clientWidth;
-  state.height = Math.max(520, plot.clientHeight);
+  state.dpr =
+    window.devicePixelRatio || 1;
 
-  plot.width = Math.max(
-    1,
-    Math.floor(state.width * state.dpr)
-  );
+  state.width =
+    plot.clientWidth;
 
-  plot.height = Math.max(
-    1,
-    Math.floor(state.height * state.dpr)
-  );
+  state.height =
+    plot.clientHeight;
 
-  plot.style.height = `${state.height}px`;
+  plot.width =
+    Math.max(
+      1,
+      Math.round(
+        state.width *
+        state.dpr
+      )
+    );
+
+  plot.height =
+    Math.max(
+      1,
+      Math.round(
+        state.height *
+        state.dpr
+      )
+    );
 
   ctx.setTransform(
     state.dpr,
@@ -139,24 +186,50 @@ function getGraphDimensions() {
 // Physics
 // -----------------------------------------------------------------------------
 
-function calculateSignal(freq1, freq2, amplitude, time) {
-  const omega1 = 2 * Math.PI * freq1;
-  const omega2 = 2 * Math.PI * freq2;
+function calculateSignal(
+  freq1,
+  freq2,
+  amplitude,
+  time
+) {
+  const omega1 =
+    2 * Math.PI * freq1;
 
-  const y1 = amplitude * Math.sin(omega1 * time);
-  const y2 = amplitude * Math.sin(omega2 * time);
+  const omega2 =
+    2 * Math.PI * freq2;
 
-  return {
-    combined: y1 + y2,
+  const y1 =
+    amplitude *
+    Math.sin(
+      omega1 * time
+    );
 
-    envelope:
-      2 *
-      amplitude *
+  const y2 =
+    amplitude *
+    Math.sin(
+      omega2 * time
+    );
+
+  const beatAmplitude =
+    2 *
+    amplitude *
+    Math.abs(
       Math.cos(
         Math.PI *
         (freq2 - freq1) *
         time
       )
+    );
+
+  return {
+    combined:
+      y1 + y2,
+
+    upperEnvelope:
+      beatAmplitude,
+
+    lowerEnvelope:
+      -beatAmplitude
   };
 }
 
@@ -223,6 +296,7 @@ function signalToY(value, graph) {
   );
 }
 
+
 function drawCurve(graph, property, color, lineWidth) {
   if (state.buffer.length === 0) {
     return;
@@ -256,31 +330,23 @@ function drawCurve(graph, property, color, lineWidth) {
   ctx.stroke();
 }
 
-function drawLabels(graph, values) {
-  ctx.font = "13px sans-serif";
-  ctx.fillStyle = plotColors.text;
+function drawLabels(
+  graph,
+  values
+) {
+  const beatFrequency =
+    values.delta;
 
-  ctx.fillText(
-    `f1 = ${values.freq1.toFixed(1)} Hz`,
-    graph.x + 10,
-    graph.y + graph.height + 24
-  );
+  const beatPeriod =
+    beatFrequency > 0
+      ? 1 / beatFrequency
+      : Infinity;
 
-  ctx.fillText(
-    `f2 = ${values.freq2.toFixed(1)} Hz`,
-    graph.x + 140,
-    graph.y + graph.height + 24
-  );
+  ctx.font =
+    "13px sans-serif";
 
-  ctx.fillText(
-    `Delta f = ${Math.abs(
-      values.freq2 - values.freq1
-    ).toFixed(1)} Hz`,
-    graph.x + 280,
-    graph.y + graph.height + 24
-  );
-
-  ctx.fillStyle = plotColors.text;
+  ctx.fillStyle =
+    plotColors.signal;
 
   ctx.fillText(
     "Kombinert signal",
@@ -288,12 +354,55 @@ function drawLabels(graph, values) {
     graph.y + 18
   );
 
-  ctx.fillStyle = plotColors.secondary;
+  ctx.fillStyle =
+    plotColors.secondary;
 
   ctx.fillText(
     "Envelope",
     graph.x + 170,
     graph.y + 18
+  );
+
+
+  ctx.fillStyle =
+    plotColors.text;
+
+  ctx.fillText(
+    `f₁ = ${values.freq1.toFixed(1)} Hz`,
+    graph.x + 10,
+    graph.y +
+      graph.height +
+      24
+  );
+
+  ctx.fillText(
+    `f₂ = ${values.freq2.toFixed(1)} Hz`,
+    graph.x + 140,
+    graph.y +
+      graph.height +
+      24
+  );
+
+
+  const beatText =
+    beatFrequency > 0
+      ? (
+          `fslag = Δf = ` +
+          `${beatFrequency.toFixed(1)} Hz` +
+          `   Tslag = ` +
+          `${beatPeriod.toFixed(2)} s`
+        )
+      : (
+          "Δf = 0 Hz — " +
+          "ingen beats"
+        );
+
+  ctx.fillText(
+    beatText,
+    graph.x + 280,
+    graph.y +
+      graph.height +
+      24
   );
 }
 
@@ -311,40 +420,50 @@ function drawMarker(x, y, color) {
   ctx.fill();
 }
 
-function drawCurrentMarkers(graph) {
-  const current = state.buffer[0];
+function drawCurrentMarkers(
+  graph
+) {
+  const current =
+    state.buffer[0];
 
   if (!current) {
     return;
   }
 
-  const markerX = graph.x;
-
-  const signalY = signalToY(
-    current.combined,
-    graph
-  );
-
-  const envelopeY = signalToY(
-    current.envelope,
-    graph
-  );
+  const markerX =
+    graph.x;
 
   drawMarker(
     markerX,
-    signalY,
+    signalToY(
+      current.combined,
+      graph
+    ),
     plotColors.primary
   );
 
   drawMarker(
     markerX,
-    envelopeY,
+    signalToY(
+      current.upperEnvelope,
+      graph
+    ),
+    plotColors.secondary
+  );
+
+  drawMarker(
+    markerX,
+    signalToY(
+      current.lowerEnvelope,
+      graph
+    ),
     plotColors.secondary
   );
 }
 
 function draw(values) {
-  const graph = getGraphDimensions();
+  const graph =
+    getGraphDimensions();
 
   clearCanvas();
   drawAxes(graph);
@@ -358,38 +477,93 @@ function draw(values) {
 
   drawCurve(
     graph,
-    "envelope",
+    "upperEnvelope",
     plotColors.secondary,
-    2
+    1.8
   );
 
-  drawLabels(graph, values);
-  drawCurrentMarkers(graph);
+  drawCurve(
+    graph,
+    "lowerEnvelope",
+    plotColors.secondary,
+    1.8
+  );
+
+  drawLabels(
+    graph,
+    values
+  );
+
+  drawCurrentMarkers(
+    graph
+  );
 }
 
 // -----------------------------------------------------------------------------
 // Animation
 // -----------------------------------------------------------------------------
 
-function animate() {
-  const values = getControlValues();
+function animate(timestamp) {
+  if (
+    state.previousTimestamp ===
+    null
+  ) {
+    state.previousTimestamp =
+      timestamp;
+  }
 
-  const signal = calculateSignal(
-    values.freq1,
-    values.freq2,
-    values.amplitude,
-    state.time
-  );
+  const realDeltaTime =
+    Math.min(
+      (
+        timestamp -
+        state.previousTimestamp
+      ) /
+        1000,
+      0.05
+    );
 
-  addSignalPoint(signal);
+  state.previousTimestamp =
+    timestamp;
+
+  const values =
+    getControlValues();
+
+  const simulationDelta =
+    realDeltaTime *
+    values.speed;
+
+  state.time +=
+    simulationDelta;
+
+  state.sampleAccumulator +=
+    simulationDelta;
+
+  while (
+    state.sampleAccumulator >=
+    HISTORY_SAMPLE_STEP
+  ) {
+    state.sampleAccumulator -=
+      HISTORY_SAMPLE_STEP;
+
+    const sampleTime =
+      state.time -
+      state.sampleAccumulator;
+
+    addSignalPoint(
+      calculateSignal(
+        values.freq1,
+        values.freq2,
+        values.amplitude,
+        sampleTime
+      )
+    );
+  }
 
   draw(values);
 
-  state.time +=
-    BASE_TIME_STEP *
-    values.speed;
-
-  requestAnimationFrame(animate);
+  requestAnimationFrame(
+    animate
+  );
 }
 
 // -----------------------------------------------------------------------------
@@ -419,7 +593,10 @@ function init() {
     );
   }
 
-  animate();
+  requestAnimationFrame(
+  animate
+);
 }
 
 init();
+

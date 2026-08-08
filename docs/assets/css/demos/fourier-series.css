@@ -4,7 +4,8 @@
 
 #plot {
   width: 100%;
-  min-height: 460px;
+  height: clamp(380px, 48vw, 470px);
+  min-height: 0;
   margin-top: 8px;
 }
 

@@ -9,7 +9,7 @@
   const RESPONSE_SAMPLES = 520;
 
   const MAGNITUDE_MIN_DB = -60;
-  const MAGNITUDE_MAX_DB = 24;
+  const MAGNITUDE_MAX_DB = 3;
 
   const PICK_RADIUS = 11;
 
@@ -239,6 +239,25 @@
     };
   }
 
+
+  function formatComplexPoint(point) {
+    const real =
+        point.re.toFixed(3);
+
+    const imaginary =
+        Math.abs(
+        point.im
+        ).toFixed(3);
+
+    const sign =
+        point.im >= 0
+        ? "+"
+        : "−";
+
+    return (
+        `${real} ${sign} j${imaginary}`
+    );
+    }
 
   // ---------------------------------------------------------------------------
   // z-plane coordinate mapping
@@ -893,102 +912,100 @@
 
   function evaluateResponse() {
     const omega =
-      new Array(
-        RESPONSE_SAMPLES + 1
-      );
+        new Array(RESPONSE_SAMPLES + 1);
+
+    const magnitude =
+        new Array(RESPONSE_SAMPLES + 1);
 
     const magnitudeDb =
-      new Array(
-        RESPONSE_SAMPLES + 1
-      );
+        new Array(RESPONSE_SAMPLES + 1);
 
     const phase =
-      new Array(
-        RESPONSE_SAMPLES + 1
-      );
+        new Array(RESPONSE_SAMPLES + 1);
 
     for (
-      let index = 0;
-      index <= RESPONSE_SAMPLES;
-      index++
+        let index = 0;
+        index <= RESPONSE_SAMPLES;
+        index++
     ) {
-      const frequency =
-        (
-          Math.PI *
-          index
-        ) /
+        const frequency =
+        (Math.PI * index) /
         RESPONSE_SAMPLES;
 
-      const z =
+        const z =
         complex(
-          Math.cos(frequency),
-          Math.sin(frequency)
+            Math.cos(frequency),
+            Math.sin(frequency)
         );
 
-      let numerator =
+        let numerator =
         complex(1, 0);
 
-      for (
-        const zero of
-          state.zeros
-      ) {
+        for (const zero of state.zeros) {
         numerator =
-          complexMultiply(
+            complexMultiply(
             numerator,
-            complexSubtract(
-              z,
-              zero
-            )
-          );
-      }
+            complexSubtract(z, zero)
+            );
+        }
 
-      let denominator =
+        let denominator =
         complex(1, 0);
 
-      for (
-        const pole of
-          state.poles
-      ) {
+        for (const pole of state.poles) {
         denominator =
-          complexMultiply(
+            complexMultiply(
             denominator,
-            complexSubtract(
-              z,
-              pole
-            )
-          );
-      }
+            complexSubtract(z, pole)
+            );
+        }
 
-      const response =
+        const response =
         complexDivide(
-          numerator,
-          denominator
+            numerator,
+            denominator
         );
 
-      omega[index] =
+        omega[index] =
         frequency;
 
-      magnitudeDb[index] =
-        20 *
-        Math.log10(
-          complexMagnitude(
-            response
-          ) +
-          1e-6
+        magnitude[index] =
+        complexMagnitude(response);
+
+        phase[index] =
+        complexPhase(response);
+    }
+
+    const peakMagnitude =
+        Math.max(
+        ...magnitude,
+        EPSILON
         );
 
-      phase[index] =
-        complexPhase(response);
+    for (
+        let index = 0;
+        index < magnitude.length;
+        index++
+    ) {
+        magnitudeDb[index] =
+        20 *
+        Math.log10(
+            Math.max(
+            magnitude[index] /
+                peakMagnitude,
+            EPSILON
+            )
+        );
     }
 
     unwrapPhase(phase);
 
     return {
-      omega,
-      magnitudeDb,
-      phase
+        omega,
+        magnitudeDb,
+        phase
     };
-  }
+    }
 
   function unwrapPhase(phase) {
     for (
@@ -1363,41 +1380,80 @@
   // ---------------------------------------------------------------------------
   // Status
   // ---------------------------------------------------------------------------
+function updateStatus() {
+  const largestPoleRadius =
+    state.poles.reduce(
+      (largest, pole) =>
+        Math.max(
+          largest,
+          complexMagnitude(pole)
+        ),
+      0
+    );
 
-  function updateStatus() {
-    const largestPoleRadius =
-      state.poles.reduce(
-        (largest, pole) =>
-          Math.max(
-            largest,
-            complexMagnitude(pole)
-          ),
-        0
+  let stabilityText;
+
+  if (largestPoleRadius < 0.999) {
+    stabilityText =
+      "Stabil (alle poler innenfor enhetsirkelen)";
+  } else if (largestPoleRadius <= 1.001) {
+    stabilityText =
+      "Marginal (pol på enhetsirkelen)";
+  } else {
+    stabilityText =
+      "Ustabil (pol utenfor enhetsirkelen)";
+  }
+
+
+  let selectedText =
+    "Valgt: ingen";
+
+  if (state.selected) {
+    const selectedPoint =
+      findPoint(
+        state.selected.type,
+        state.selected.id
       );
 
-    const stable =
-      largestPoleRadius < 1;
+    if (selectedPoint) {
+      const typeLabel =
+        state.selected.type === "zero"
+          ? "null"
+          : "pol";
 
-    const selectedText =
-      state.selected
-        ? `Valgt: ${
-            state.selected.type === "zero"
-              ? "null"
-              : "pol"
-          } #${state.selected.id}`
-        : "Valgt: ingen";
+      const real =
+        selectedPoint.re.toFixed(3);
 
-    status.innerHTML =
-      `Nuller: <b>${state.zeros.length}</b> &nbsp;|&nbsp; ` +
-      `Poler: <b>${state.poles.length}</b> &nbsp;|&nbsp; ` +
-      `Maks |pol|: <b>${largestPoleRadius.toFixed(3)}</b> &nbsp;|&nbsp; ` +
-      `Stabilitet: <b>${
-        stable
-          ? "Stabil (alle poler innenfor enhetsirkelen)"
-          : "Ustabil / marginal"
-      }</b> &nbsp;|&nbsp; ` +
-      selectedText;
+      const imaginary =
+        Math.abs(
+          selectedPoint.im
+        ).toFixed(3);
+
+      const sign =
+        selectedPoint.im >= 0
+          ? "+"
+          : "−";
+
+      const radius =
+        complexMagnitude(
+          selectedPoint
+        ).toFixed(3);
+
+      selectedText =
+        `Valgt: ${typeLabel} ` +
+        `z = ${real} ${sign} j${imaginary}, ` +
+        `|z| = ${radius}`;
+    }
   }
+
+handlePointerDown
+  status.innerHTML =
+    `Nuller: <b>${state.zeros.length}</b> &nbsp;|&nbsp; ` +
+    `Poler: <b>${state.poles.length}</b> &nbsp;|&nbsp; ` +
+    `Maks |pol|: <b>${largestPoleRadius.toFixed(3)}</b> &nbsp;|&nbsp; ` +
+    `Stabilitet: <b>${stabilityText}</b> &nbsp;|&nbsp; ` +
+    selectedText;
+}
 
 
   // ---------------------------------------------------------------------------
@@ -1535,12 +1591,6 @@
       return;
     }
 
-    // Move mode does not create new points
-    if (state.mode === "move") {
-      state.selected = null;
-      redrawAll();
-      return;
-    }
 
     const point =
       screenToComplex(

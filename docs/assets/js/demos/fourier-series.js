@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------
 
 const MAX_WAVEFORM_POINTS = 760;
-const BASE_TIME_STEP = 0.01;
+const BASE_ANGULAR_SPEED = 1;
 
 const LAYOUT = {
   originX: 0.28,
@@ -62,7 +62,10 @@ const state = {
   width: 0,
   height: 0,
   dpr: window.devicePixelRatio || 1,
+
   time: 0,
+  previousTimestamp: null,
+
   waveform: []
 };
 
@@ -92,21 +95,30 @@ function getControlValues() {
 // -----------------------------------------------------------------------------
 
 function resizeCanvas() {
-  state.dpr = window.devicePixelRatio || 1;
-  state.width = plot.clientWidth;
-  state.height = Math.max(540, plot.clientHeight);
+  state.dpr =
+    window.devicePixelRatio || 1;
 
-  plot.width = Math.max(
-    1,
-    Math.floor(state.width * state.dpr)
-  );
+  state.width =
+    plot.clientWidth;
 
-  plot.height = Math.max(
-    1,
-    Math.floor(state.height * state.dpr)
-  );
+  state.height =
+    plot.clientHeight;
 
-  plot.style.height = `${state.height}px`;
+  plot.width =
+    Math.max(
+      1,
+      Math.round(
+        state.width * state.dpr
+      )
+    );
+
+  plot.height =
+    Math.max(
+      1,
+      Math.round(
+        state.height * state.dpr
+      )
+    );
 
   ctx.setTransform(
     state.dpr,
@@ -116,6 +128,10 @@ function resizeCanvas() {
     0,
     0
   );
+}
+
+function resetWaveform() {
+  state.waveform.length = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -326,7 +342,9 @@ function drawWaveform(graph) {
     graph.width /
     (MAX_WAVEFORM_POINTS - 1);
 
-  ctx.strokeStyle = plotColors.secondary;
+  ctx.strokeStyle =
+    plotColors.secondary;
+
   ctx.lineWidth = 2;
   ctx.beginPath();
 
@@ -383,10 +401,10 @@ function calculateEndpoint(coefficients, origin, speed) {
 
   for (const coefficient of coefficients) {
     const angle =
-      coefficient.frequency *
+    coefficient.frequency *
         state.time *
         speed +
-      coefficient.phase;
+    coefficient.phase;
 
     const nextX =
       x +
@@ -480,9 +498,9 @@ function draw(values) {
   const waveformValue =
     endpoint.y - origin.y;
 
-  addWaveformPoint(
+    addWaveformPoint(
     waveformValue
-  );
+    );
 
   drawGraphFrame(graph);
 
@@ -502,18 +520,37 @@ function draw(values) {
   );
 }
 
+
 // -----------------------------------------------------------------------------
 // Animation
 // -----------------------------------------------------------------------------
 
-function animate() {
+function animate(timestamp) {
+  if (state.previousTimestamp === null) {
+    state.previousTimestamp =
+      timestamp;
+  }
+
+  const deltaTime =
+    Math.min(
+      (timestamp -
+        state.previousTimestamp) /
+        1000,
+      0.05
+    );
+
+  state.previousTimestamp =
+    timestamp;
+
   const values =
     getControlValues();
 
+  state.time +=
+    deltaTime *
+    BASE_ANGULAR_SPEED;
+
   clearCanvas();
   draw(values);
-
-  state.time += BASE_TIME_STEP;
 
   requestAnimationFrame(animate);
 }
@@ -526,20 +563,26 @@ function init() {
   updateReadouts();
   resizeCanvas();
 
-  controls.shape.addEventListener(
+    controls.shape.addEventListener(
     "change",
-    updateReadouts
-  );
+    () => {
+        resetWaveform();
+        updateReadouts();
+    }
+    );
 
-  controls.terms.addEventListener(
+    controls.terms.addEventListener(
+    "input",
+    () => {
+        resetWaveform();
+        updateReadouts();
+    }
+    );
+
+    controls.speed.addEventListener(
     "input",
     updateReadouts
-  );
-
-  controls.speed.addEventListener(
-    "input",
-    updateReadouts
-  );
+    );
 
   if ("ResizeObserver" in window) {
     resizeObserver =
@@ -555,7 +598,7 @@ function init() {
     );
   }
 
-  animate();
+  requestAnimationFrame(animate);
 }
 
 init();

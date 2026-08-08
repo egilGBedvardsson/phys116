@@ -1,3 +1,8 @@
+// =============================================================================
+// FIR filter demo
+// =============================================================================
+
+
 // -----------------------------------------------------------------------------
 // Configuration
 // -----------------------------------------------------------------------------
@@ -6,84 +11,180 @@ const SAMPLE_RATE = 256;
 const SAMPLE_COUNT = 256;
 const RESPONSE_BINS = 256;
 
+const NYQUIST_FREQUENCY = SAMPLE_RATE / 2;
+
+const MIN_BAND_WIDTH_HZ = 10;
+
+// The notch control specifies its center frequency.
+// A fixed 20 Hz stop band keeps the UI simple while still producing
+// a visible notch with the default 31-tap Hamming-window FIR filter.
+const NOTCH_BANDWIDTH_HZ = 20;
+
+
 // -----------------------------------------------------------------------------
 // DOM
 // -----------------------------------------------------------------------------
 
 const controls = {
   signalType: document.getElementById("signalType"),
+
   f1: document.getElementById("f1"),
   f2: document.getElementById("f2"),
   noise: document.getElementById("noise"),
-  kernelLength: document.getElementById("kernelLength"),
-  passes: document.getElementById("passes"),
-  smooth: document.getElementById("smooth"),
-  low: document.getElementById("low"),
-  high: document.getElementById("high"),
-  band: document.getElementById("band"),
-  notch: document.getElementById("notch")
+
+  filterType: document.getElementById("filterType"),
+
+  cutoff: document.getElementById("cutoff"),
+
+  bandLow: document.getElementById("bandLow"),
+  bandHigh: document.getElementById("bandHigh"),
+
+  movingAverageLength:
+    document.getElementById("movingAverageLength"),
+
+  kernelLength:
+    document.getElementById("kernelLength"),
+
+  passes:
+    document.getElementById("passes")
 };
+
 
 const readouts = {
   f1: document.getElementById("f1Val"),
   f2: document.getElementById("f2Val"),
   noise: document.getElementById("noiseVal"),
-  kernelLength: document.getElementById("kernelLengthVal"),
-  passes: document.getElementById("passesVal"),
-  smooth: document.getElementById("smoothVal"),
-  low: document.getElementById("lowVal"),
-  high: document.getElementById("highVal"),
-  band: document.getElementById("bandVal"),
-  notch: document.getElementById("notchVal")
+
+  cutoff: document.getElementById("cutoffVal"),
+
+  bandLow: document.getElementById("bandLowVal"),
+  bandHigh: document.getElementById("bandHighVal"),
+
+  movingAverageLength:
+    document.getElementById("movingAverageLengthVal"),
+
+  kernelLength:
+    document.getElementById("kernelLengthVal"),
+
+  passes:
+    document.getElementById("passesVal")
 };
 
-const summary = document.getElementById("summary");
-const plotLegend = document.getElementById("plotLegend");
+const filterControls = {
+  cutoff:
+    document.getElementById("cutoffControl"),
 
-const outputCanvas = document.getElementById("outputCanvas");
-const impulseCanvas = document.getElementById("impulseCanvas");
-const responseCanvas = document.getElementById("responseCanvas");
+  cutoffLabel:
+    document.getElementById("cutoffLabel"),
 
-const outputCtx = outputCanvas.getContext("2d");
-const impulseCtx = impulseCanvas.getContext("2d");
-const responseCtx = responseCanvas.getContext("2d");
+  band:
+    document.getElementById("bandControl"),
+
+  movingAverage:
+    document.getElementById("movingAverageControl")
+};
+
+
+const summary =
+  document.getElementById("summary");
+
+const plotLegend =
+  document.getElementById("plotLegend");
+
+
+const outputCanvas =
+  document.getElementById("outputCanvas");
+
+const impulseCanvas =
+  document.getElementById("impulseCanvas");
+
+const responseCanvas =
+  document.getElementById("responseCanvas");
+
+
+const outputCtx =
+  outputCanvas.getContext("2d");
+
+const impulseCtx =
+  impulseCanvas.getContext("2d");
+
+const responseCtx =
+  responseCanvas.getContext("2d");
+
 
 // -----------------------------------------------------------------------------
 // Theme
 // -----------------------------------------------------------------------------
 
-
 const plotColors = {
-  background: DemoUtils.cssVar("--theme-surface-bg", "#ffffff"),
-  grid: DemoUtils.cssVar("--plot-grid", "#e4e4e4"),
-  axis: DemoUtils.cssVar("--plot-axis-soft", "#bbbbbb"),
-  text: DemoUtils.cssVar("--plot-text", "#111111"),
-  muted: DemoUtils.cssVar("--plot-muted", "#666666")
+  background:
+    DemoUtils.cssVar(
+      "--theme-surface-bg",
+      "#ffffff"
+    ),
+
+  grid:
+    DemoUtils.cssVar(
+      "--plot-grid",
+      "#e4e4e4"
+    ),
+
+  axis:
+    DemoUtils.cssVar(
+      "--plot-axis-soft",
+      "#bbbbbb"
+    ),
+
+  text:
+    DemoUtils.cssVar(
+      "--plot-text",
+      "#111111"
+    ),
+
+  muted:
+    DemoUtils.cssVar(
+      "--plot-muted",
+      "#666666"
+    )
 };
+
 
 // -----------------------------------------------------------------------------
 // General math helpers
 // -----------------------------------------------------------------------------
 
 function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
+  return Math.min(
+    max,
+    Math.max(min, value)
+  );
 }
+
 
 function sinc(x) {
   if (Math.abs(x) < 1e-12) {
     return 1;
   }
 
-  return Math.sin(Math.PI * x) / (Math.PI * x);
+  return (
+    Math.sin(Math.PI * x) /
+    (Math.PI * x)
+  );
 }
+
 
 function seededNoise(index) {
   const x =
-    Math.sin(index * 78.233 + 0.918) *
+    Math.sin(
+      index * 78.233 + 0.918
+    ) *
     43758.5453;
 
-  return (x - Math.floor(x)) * 2 - 1;
+  return (
+    (x - Math.floor(x)) * 2 - 1
+  );
 }
+
 
 function hamming(index, length) {
   if (length <= 1) {
@@ -95,10 +196,20 @@ function hamming(index, length) {
     0.46 *
       Math.cos(
         (2 * Math.PI * index) /
-          (length - 1)
+        (length - 1)
       )
   );
 }
+
+
+function hzToCyclesPerSample(frequencyHz) {
+  return clamp(
+    frequencyHz / SAMPLE_RATE,
+    1e-6,
+    0.499
+  );
+}
+
 
 // -----------------------------------------------------------------------------
 // Convolution
@@ -110,8 +221,16 @@ function convolve(a, b) {
       a.length + b.length - 1
     ).fill(0);
 
-  for (let i = 0; i < a.length; i++) {
-    for (let j = 0; j < b.length; j++) {
+  for (
+    let i = 0;
+    i < a.length;
+    i++
+  ) {
+    for (
+      let j = 0;
+      j < b.length;
+      j++
+    ) {
       output[i + j] +=
         a[i] * b[j];
     }
@@ -119,6 +238,7 @@ function convolve(a, b) {
 
   return output;
 }
+
 
 function convolveSame(signal, kernel) {
   const full =
@@ -135,6 +255,7 @@ function convolveSame(signal, kernel) {
   );
 }
 
+
 // -----------------------------------------------------------------------------
 // FIR kernels
 // -----------------------------------------------------------------------------
@@ -143,22 +264,30 @@ function lowpassKernel(
   length,
   cutoffCyclesPerSample
 ) {
-  const order = length - 1;
-  const center = order / 2;
+  const order =
+    length - 1;
+
+  const center =
+    order / 2;
 
   const kernel =
     new Array(length);
 
-  for (let n = 0; n < length; n++) {
-    const m = n - center;
+  for (
+    let n = 0;
+    n < length;
+    n++
+  ) {
+    const m =
+      n - center;
 
     const ideal =
       2 *
       cutoffCyclesPerSample *
       sinc(
         2 *
-          cutoffCyclesPerSample *
-          m
+        cutoffCyclesPerSample *
+        m
       );
 
     kernel[n] =
@@ -166,10 +295,11 @@ function lowpassKernel(
       hamming(n, length);
   }
 
+  // Normalize DC gain to 1.
   const sum =
     kernel.reduce(
-      (accumulator, value) =>
-        accumulator + value,
+      (total, value) =>
+        total + value,
       0
     );
 
@@ -186,6 +316,7 @@ function lowpassKernel(
   return kernel;
 }
 
+
 function highpassKernel(
   length,
   cutoffCyclesPerSample
@@ -200,58 +331,68 @@ function highpassKernel(
     Math.floor(length / 2);
 
   const highpass =
-    lowpass.map(value => -value);
+    lowpass.map(
+      value => -value
+    );
 
+  // Spectral inversion
   highpass[center] += 1;
 
   return highpass;
 }
 
+
 function bandpassKernel(
   length,
-  lowCut,
-  highCut
+  lowCutoff,
+  highCutoff
 ) {
-  const high =
+  const upperLowpass =
     lowpassKernel(
       length,
-      highCut
+      highCutoff
     );
 
-  const low =
+  const lowerLowpass =
     lowpassKernel(
       length,
-      lowCut
+      lowCutoff
     );
 
-  return high.map(
+  return upperLowpass.map(
     (value, index) =>
-      value - low[index]
+      value -
+      lowerLowpass[index]
   );
 }
 
+
 function notchKernel(
   length,
-  lowCut,
-  highCut
+  lowCutoff,
+  highCutoff
 ) {
   const bandpass =
     bandpassKernel(
       length,
-      lowCut,
-      highCut
+      lowCutoff,
+      highCutoff
     );
 
   const center =
     Math.floor(length / 2);
 
   const notch =
-    bandpass.map(value => -value);
+    bandpass.map(
+      value => -value
+    );
 
+  // Spectral inversion
   notch[center] += 1;
 
   return notch;
 }
+
 
 function movingAverageKernel(length) {
   return new Array(length).fill(
@@ -259,31 +400,6 @@ function movingAverageKernel(length) {
   );
 }
 
-function identityKernel(length) {
-  const kernel =
-    new Array(length).fill(0);
-
-  kernel[
-    Math.floor(length / 2)
-  ] = 1;
-
-  return kernel;
-}
-
-function blendKernel(
-  kernel,
-  strength
-) {
-  const identity =
-    identityKernel(kernel.length);
-
-  return kernel.map(
-    (value, index) =>
-      (1 - strength) *
-        identity[index] +
-      strength * value
-  );
-}
 
 // -----------------------------------------------------------------------------
 // Frequency response
@@ -296,7 +412,11 @@ function magnitudeResponse(
   const magnitude = [];
   const frequency = [];
 
-  for (let i = 0; i < bins; i++) {
+  for (
+    let i = 0;
+    i < bins;
+    i++
+  ) {
     const omega =
       (Math.PI * i) /
       (bins - 1);
@@ -319,15 +439,15 @@ function magnitudeResponse(
     }
 
     magnitude.push(
-      Math.sqrt(
-        real * real +
-          imaginary * imaginary
+      Math.hypot(
+        real,
+        imaginary
       )
     );
 
     frequency.push(
       (i / (bins - 1)) *
-        (SAMPLE_RATE / 2)
+      NYQUIST_FREQUENCY
     );
   }
 
@@ -336,6 +456,7 @@ function magnitudeResponse(
     frequency
   };
 }
+
 
 function normalizeByPeak(kernel) {
   const { magnitude } =
@@ -348,9 +469,11 @@ function normalizeByPeak(kernel) {
     );
 
   return kernel.map(
-    value => value / peak
+    value =>
+      value / peak
   );
 }
+
 
 // -----------------------------------------------------------------------------
 // Signal generation
@@ -390,56 +513,62 @@ function generateSignal() {
         value =
           Math.sin(
             2 *
-              Math.PI *
-              f1 *
-              time
+            Math.PI *
+            f1 *
+            time
           );
         break;
+
 
       case "twoTone":
         value =
           0.7 *
             Math.sin(
               2 *
-                Math.PI *
-                f1 *
-                time
+              Math.PI *
+              f1 *
+              time
             ) +
           0.55 *
             Math.sin(
               2 *
-                Math.PI *
-                f2 *
-                time
+              Math.PI *
+              f2 *
+              time
             );
         break;
+
 
       case "square":
         value =
           Math.sign(
             Math.sin(
               2 *
-                Math.PI *
-                f1 *
-                time
+              Math.PI *
+              f1 *
+              time
             )
           );
         break;
+
 
       case "chirp":
         value =
           Math.sin(
             2 *
-              Math.PI *
+            Math.PI *
+            (
+              f1 * time +
               (
-                f1 * time +
-                ((f2 - f1) *
-                  time *
-                  time) /
-                  (2 * duration)
-              )
+                (f2 - f1) *
+                time *
+                time
+              ) /
+              (2 * duration)
+            )
           );
         break;
+
 
       case "impulse":
         value =
@@ -451,6 +580,7 @@ function generateSignal() {
             : 0;
         break;
 
+
       case "noise":
         value =
           seededNoise(n);
@@ -460,21 +590,30 @@ function generateSignal() {
     signal[n] =
       value +
       noiseLevel *
-        seededNoise(n + 900);
+      seededNoise(n + 900);
   }
 
   return signal;
 }
 
+
 // -----------------------------------------------------------------------------
-// Filter construction
+// Filter settings
 // -----------------------------------------------------------------------------
 
 function getFilterSettings() {
   return {
-    length:
+    type:
+      controls.filterType.value,
+
+    kernelLength:
       Number(
         controls.kernelLength.value
+      ),
+
+    movingAverageLength:
+      Number(
+        controls.movingAverageLength.value
       ),
 
     passes:
@@ -482,192 +621,178 @@ function getFilterSettings() {
         controls.passes.value
       ),
 
-    smooth:
+    cutoffHz:
       Number(
-        controls.smooth.value
-      ) / 100,
+        controls.cutoff.value
+      ),
 
-    low:
+    bandLowHz:
       Number(
-        controls.low.value
-      ) / 100,
+        controls.bandLow.value
+      ),
 
-    high:
+    bandHighHz:
       Number(
-        controls.high.value
-      ) / 100,
-
-    band:
-      Number(
-        controls.band.value
-      ) / 100,
-
-    notch:
-      Number(
-        controls.notch.value
-      ) / 100
+        controls.bandHigh.value
+      )
   };
 }
 
-function buildCombinedKernel() {
+
+// -----------------------------------------------------------------------------
+// Filter construction
+// -----------------------------------------------------------------------------
+
+function buildSinglePassKernel(
+  settings
+) {
+  switch (settings.type) {
+    case "none":
+      return {
+        kernel: [1]
+      };
+
+
+    case "moving-average":
+      return {
+        kernel:
+          movingAverageKernel(
+            settings.movingAverageLength
+          )
+      };
+
+
+    case "lowpass":
+      return {
+        kernel:
+          lowpassKernel(
+            settings.kernelLength,
+            hzToCyclesPerSample(
+              settings.cutoffHz
+            )
+          ),
+
+        cutoffHz:
+          settings.cutoffHz
+      };
+
+
+    case "highpass":
+      return {
+        kernel:
+          highpassKernel(
+            settings.kernelLength,
+            hzToCyclesPerSample(
+              settings.cutoffHz
+            )
+          ),
+
+        cutoffHz:
+          settings.cutoffHz
+      };
+
+
+    case "bandpass":
+      return {
+        kernel:
+          bandpassKernel(
+            settings.kernelLength,
+
+            hzToCyclesPerSample(
+              settings.bandLowHz
+            ),
+
+            hzToCyclesPerSample(
+              settings.bandHighHz
+            )
+          ),
+
+        bandLowHz:
+          settings.bandLowHz,
+
+        bandHighHz:
+          settings.bandHighHz
+      };
+
+
+    case "notch": {
+      const halfWidth =
+        NOTCH_BANDWIDTH_HZ / 2;
+
+      const lowHz =
+        clamp(
+          settings.cutoffHz -
+            halfWidth,
+          1,
+          NYQUIST_FREQUENCY - 2
+        );
+
+      const highHz =
+        clamp(
+          settings.cutoffHz +
+            halfWidth,
+          lowHz + 1,
+          NYQUIST_FREQUENCY - 1
+        );
+
+      return {
+        kernel:
+          notchKernel(
+            settings.kernelLength,
+
+            hzToCyclesPerSample(
+              lowHz
+            ),
+
+            hzToCyclesPerSample(
+              highHz
+            )
+          ),
+
+        notchCenterHz:
+          settings.cutoffHz,
+
+        notchLowHz:
+          lowHz,
+
+        notchHighHz:
+          highHz
+      };
+    }
+
+
+    default:
+      return {
+        kernel: [1]
+      };
+  }
+}
+
+
+function buildFilter() {
   const settings =
     getFilterSettings();
 
-  const f1 =
-    Number(controls.f1.value);
-
-  const f2 =
-    Number(controls.f2.value);
-
-  const minFrequency =
-    Math.min(f1, f2);
-
-  const maxFrequency =
-    Math.max(f1, f2);
-
-  const lowCut =
-    clamp(
-      0.02 +
-        0.45 *
-          settings.low,
-      0.02,
-      0.48
+  const filter =
+    buildSinglePassKernel(
+      settings
     );
 
-  const highCut =
-    clamp(
-      0.02 +
-        0.45 *
-          settings.high,
-      0.02,
-      0.48
-    );
-
-  const bandLow =
-    clamp(
-      (minFrequency - 8) /
-        SAMPLE_RATE,
-      0.02,
-      0.35
-    );
-
-  const bandHigh =
-    clamp(
-      (maxFrequency + 8) /
-        SAMPLE_RATE,
-      bandLow + 0.03,
-      0.48
-    );
-
-  const notchCenter =
-    clamp(
-      f2 / SAMPLE_RATE,
-      0.04,
-      0.46
-    );
-
-  const notchHalfWidth =
-    0.018;
-
-  const notchLow =
-    clamp(
-      notchCenter -
-        notchHalfWidth,
-      0.01,
-      0.46
-    );
-
-  const notchHigh =
-    clamp(
-      notchCenter +
-        notchHalfWidth,
-      notchLow + 0.01,
-      0.49
-    );
-
-  const kernels = [];
-
-  if (settings.smooth > 0) {
-    kernels.push(
-      blendKernel(
-        movingAverageKernel(
-          settings.length
-        ),
-        settings.smooth
-      )
-    );
-  }
-
-  if (settings.low > 0) {
-    kernels.push(
-      blendKernel(
-        lowpassKernel(
-          settings.length,
-          lowCut
-        ),
-        settings.low
-      )
-    );
-  }
-
-  if (settings.high > 0) {
-    kernels.push(
-      blendKernel(
-        highpassKernel(
-          settings.length,
-          highCut
-        ),
-        settings.high
-      )
-    );
-  }
-
-  if (settings.band > 0) {
-    kernels.push(
-      blendKernel(
-        bandpassKernel(
-          settings.length,
-          bandLow,
-          bandHigh
-        ),
-        settings.band
-      )
-    );
-  }
-
-  if (settings.notch > 0) {
-    kernels.push(
-      blendKernel(
-        notchKernel(
-          settings.length,
-          notchLow,
-          notchHigh
-        ),
-        settings.notch
-      )
-    );
-  }
-
-  let singlePass = [1];
-
-  for (const kernel of kernels) {
-    singlePass =
-      convolve(
-        singlePass,
-        kernel
-      );
-  }
-
-  singlePass =
+  let singlePass =
     normalizeByPeak(
-      singlePass
+      filter.kernel
     );
 
   let total = [1];
 
+  const passes =
+    settings.type === "none"
+      ? 1
+      : settings.passes;
+
   for (
     let i = 0;
-    i < settings.passes;
+    i < passes;
     i++
   ) {
     total =
@@ -681,31 +806,12 @@ function buildCombinedKernel() {
     normalizeByPeak(total);
 
   return {
+    ...filter,
     total,
-    activeFilters:
-      kernels.length,
-
-    lowCutHz:
-      lowCut *
-      SAMPLE_RATE,
-
-    highCutHz:
-      highCut *
-      SAMPLE_RATE,
-
-    bandLowHz:
-      bandLow *
-      SAMPLE_RATE,
-
-    bandHighHz:
-      bandHigh *
-      SAMPLE_RATE,
-
-    notchCenterHz:
-      notchCenter *
-      SAMPLE_RATE
+    passes
   };
 }
+
 
 // -----------------------------------------------------------------------------
 // Canvas helpers
@@ -733,6 +839,7 @@ function clearCanvas(
   );
 }
 
+
 function drawGrid(
   context,
   canvas
@@ -748,7 +855,11 @@ function drawGrid(
 
   context.lineWidth = 1;
 
-  for (let i = 1; i < 4; i++) {
+  for (
+    let i = 1;
+    i < 4;
+    i++
+  ) {
     const y =
       (height * i) / 4;
 
@@ -758,7 +869,11 @@ function drawGrid(
     context.stroke();
   }
 
-  for (let i = 1; i < 5; i++) {
+  for (
+    let i = 1;
+    i < 5;
+    i++
+  ) {
     const x =
       (width * i) / 5;
 
@@ -769,8 +884,9 @@ function drawGrid(
   }
 }
 
+
 // -----------------------------------------------------------------------------
-// Interpolation
+// Plot interpolation
 // -----------------------------------------------------------------------------
 
 function sincInterpolate(
@@ -790,11 +906,13 @@ function sincInterpolate(
     i++
   ) {
     const x =
-      (i /
+      (
+        i /
         Math.max(
           1,
           outputCount - 1
-        )) *
+        )
+      ) *
       maxIndex;
 
     const center =
@@ -854,8 +972,9 @@ function sincInterpolate(
   return output;
 }
 
+
 // -----------------------------------------------------------------------------
-// Plot drawing
+// Main signal plot
 // -----------------------------------------------------------------------------
 
 function drawMainPlot(
@@ -899,12 +1018,8 @@ function drawMainPlot(
   const maxAbs =
     Math.max(
       1e-6,
-      ...smoothInput.map(
-        Math.abs
-      ),
-      ...smoothOutput.map(
-        Math.abs
-      )
+      ...smoothInput.map(Math.abs),
+      ...smoothOutput.map(Math.abs)
     );
 
   function mapX(index, length) {
@@ -914,18 +1029,20 @@ function drawMainPlot(
         1,
         length - 1
       )
-    ) * width;
+    ) *
+    width;
   }
 
   function mapY(value) {
     return (
       height / 2 -
       (value / maxAbs) *
-        (height * 0.42)
+      (height * 0.42)
     );
   }
 
-  // Input
+
+  // Input signal
   outputCtx.strokeStyle =
     plotColors.axis;
 
@@ -953,7 +1070,8 @@ function drawMainPlot(
 
   outputCtx.stroke();
 
-  // Output
+
+  // Filtered signal
   outputCtx.strokeStyle =
     plotColors.text;
 
@@ -981,6 +1099,11 @@ function drawMainPlot(
 
   outputCtx.stroke();
 }
+
+
+// -----------------------------------------------------------------------------
+// Impulse response plot
+// -----------------------------------------------------------------------------
 
 function drawImpulse(kernel) {
   clearCanvas(
@@ -1026,7 +1149,7 @@ function drawImpulse(kernel) {
       const y =
         height / 2 -
         (value / maxAbs) *
-          (height * 0.42);
+        (height * 0.42);
 
       if (index === 0) {
         impulseCtx.moveTo(x, y);
@@ -1045,11 +1168,16 @@ function drawImpulse(kernel) {
     "15px Times New Roman";
 
   impulseCtx.fillText(
-    "Kombinert impulsrespons h[n]",
+    "Impulsrespons h[n]",
     12,
     22
   );
 }
+
+
+// -----------------------------------------------------------------------------
+// Frequency-response plot
+// -----------------------------------------------------------------------------
 
 function drawResponse(kernel) {
   clearCanvas(
@@ -1065,10 +1193,11 @@ function drawResponse(kernel) {
   const {
     magnitude,
     frequency
-  } = magnitudeResponse(
-    kernel,
-    260
-  );
+  } =
+    magnitudeResponse(
+      kernel,
+      260
+    );
 
   const decibels =
     magnitude.map(
@@ -1116,7 +1245,7 @@ function drawResponse(kernel) {
           (db - minDb) /
           (maxDb - minDb)
         ) *
-          (height - 20) -
+        (height - 20) -
         10;
 
       if (index === 0) {
@@ -1135,6 +1264,7 @@ function drawResponse(kernel) {
 
   responseCtx.stroke();
 
+
   responseCtx.fillStyle =
     plotColors.text;
 
@@ -1146,6 +1276,7 @@ function drawResponse(kernel) {
     12,
     22
   );
+
 
   responseCtx.fillStyle =
     plotColors.muted;
@@ -1170,8 +1301,105 @@ function drawResponse(kernel) {
   );
 }
 
+
 // -----------------------------------------------------------------------------
-// UI
+// Filter-control visibility
+// -----------------------------------------------------------------------------
+
+function updateFilterControls() {
+  const type =
+    controls.filterType.value;
+
+  const usesCutoff =
+    type === "lowpass" ||
+    type === "highpass" ||
+    type === "notch";
+
+  filterControls.cutoff.hidden =
+    !usesCutoff;
+
+  filterControls.band.hidden =
+    type !== "bandpass";
+
+  filterControls.movingAverage.hidden =
+    type !== "moving-average";
+
+  filterControls.cutoffLabel.textContent =
+    type === "notch"
+      ? "Notch-senter"
+      : "Grensefrekvens";
+}
+
+
+// -----------------------------------------------------------------------------
+// Band-pass constraints
+// -----------------------------------------------------------------------------
+
+function enforceBandLimits(
+  changedControl
+) {
+  let low =
+    Number(
+      controls.bandLow.value
+    );
+
+  let high =
+    Number(
+      controls.bandHigh.value
+    );
+
+  if (
+    high - low >=
+    MIN_BAND_WIDTH_HZ
+  ) {
+    return;
+  }
+
+  if (
+    changedControl ===
+    controls.bandLow
+  ) {
+    low =
+      high -
+      MIN_BAND_WIDTH_HZ;
+
+    low =
+      clamp(
+        low,
+        Number(
+          controls.bandLow.min
+        ),
+        Number(
+          controls.bandLow.max
+        )
+      );
+
+    controls.bandLow.value =
+      low;
+  } else {
+    high =
+      low +
+      MIN_BAND_WIDTH_HZ;
+
+    high =
+      clamp(
+        high,
+        Number(
+          controls.bandHigh.min
+        ),
+        Number(
+          controls.bandHigh.max
+        )
+      );
+
+    controls.bandHigh.value =
+      high;
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// UI readouts
 // -----------------------------------------------------------------------------
 
 function updateReadouts() {
@@ -1186,151 +1414,122 @@ function updateReadouts() {
       controls.noise.value
     ).toFixed(2);
 
+  readouts.cutoff.textContent =
+    `${controls.cutoff.value} Hz`;
+
+  readouts.bandLow.textContent =
+    `${controls.bandLow.value} Hz`;
+
+  readouts.bandHigh.textContent =
+    `${controls.bandHigh.value} Hz`;
+
+  readouts.movingAverageLength.textContent =
+    controls.movingAverageLength.value;
+
   readouts.kernelLength.textContent =
     controls.kernelLength.value;
 
   readouts.passes.textContent =
     controls.passes.value;
-
-  readouts.smooth.textContent =
-    `${controls.smooth.value}%`;
-
-  readouts.low.textContent =
-    `${controls.low.value}%`;
-
-  readouts.high.textContent =
-    `${controls.high.value}%`;
-
-  readouts.band.textContent =
-    `${controls.band.value}%`;
-
-  readouts.notch.textContent =
-    `${controls.notch.value}%`;
 }
+
 
 function formatHz(value) {
   return `${Math.round(value)} Hz`;
 }
 
-function getActiveFilters() {
-  const active = [];
 
-  if (
-    Number(
-      controls.smooth.value
-    ) > 0
-  ) {
-    active.push("Smoothing");
-  }
+// -----------------------------------------------------------------------------
+// Summary
+// -----------------------------------------------------------------------------
 
-  if (
-    Number(
-      controls.low.value
-    ) > 0
-  ) {
-    active.push("Lavpass");
-  }
-
-  if (
-    Number(
-      controls.high.value
-    ) > 0
-  ) {
-    active.push("Høypass");
-  }
-
-  if (
-    Number(
-      controls.band.value
-    ) > 0
-  ) {
-    active.push("Båndpass");
-  }
-
-  if (
-    Number(
-      controls.notch.value
-    ) > 0
-  ) {
-    active.push("Notch");
-  }
-
-  return active;
-}
-
-function updateSummary(
-  filterState
-) {
-  const active =
-    getActiveFilters();
-
+function updateSummary(filterState) {
   const selectedSignal =
-    controls.signalType
-      .options[
-        controls.signalType
-          .selectedIndex
-      ]
-      .text;
+    controls.signalType.options[
+      controls.signalType.selectedIndex
+    ].text;
+
+  const selectedFilter =
+    controls.filterType.options[
+      controls.filterType.selectedIndex
+    ].text;
 
   const details = [
     `Signal: ${selectedSignal}`,
-    `Filtre: ${
-      active.length
-        ? active.join(" + ")
-        : "Ingen"
-    }`,
-    `Koeffisientlengde: ${filterState.total.length}`
+    `Filter: ${selectedFilter}`
   ];
 
+
+  switch (
+    controls.filterType.value
+  ) {
+    case "moving-average":
+      details.push(
+        `Vinduslengde: ${controls.movingAverageLength.value}`
+      );
+      break;
+
+
+    case "lowpass":
+      details.push(
+        `Grense: ${formatHz(
+          filterState.cutoffHz
+        )}`
+      );
+      break;
+
+
+    case "highpass":
+      details.push(
+        `Grense: ${formatHz(
+          filterState.cutoffHz
+        )}`
+      );
+      break;
+
+
+    case "bandpass":
+      details.push(
+        `Bånd: ${formatHz(
+          filterState.bandLowHz
+        )}–${formatHz(
+          filterState.bandHighHz
+        )}`
+      );
+      break;
+
+
+    case "notch":
+      details.push(
+        `Senter: ${formatHz(
+          filterState.notchCenterHz
+        )}`
+      );
+
+      details.push(
+        `Stopbånd: ${formatHz(
+          filterState.notchLowHz
+        )}–${formatHz(
+          filterState.notchHighHz
+        )}`
+      );
+      break;
+  }
+
+
   if (
-    Number(
-      controls.low.value
-    ) > 0
+    controls.filterType.value !==
+    "none"
   ) {
     details.push(
-      `LP cutoff: ${formatHz(
-        filterState.lowCutHz
-      )}`
+      `Konvolusjoner: ${filterState.passes}`
+    );
+
+    details.push(
+      `Effektiv lengde: ${filterState.total.length}`
     );
   }
 
-  if (
-    Number(
-      controls.high.value
-    ) > 0
-  ) {
-    details.push(
-      `HP cutoff: ${formatHz(
-        filterState.highCutHz
-      )}`
-    );
-  }
-
-  if (
-    Number(
-      controls.band.value
-    ) > 0
-  ) {
-    details.push(
-      `Båndpass: ${formatHz(
-        filterState.bandLowHz
-      )}–${formatHz(
-        filterState.bandHighHz
-      )}`
-    );
-  }
-
-  if (
-    Number(
-      controls.notch.value
-    ) > 0
-  ) {
-    details.push(
-      `Notch senter: ${formatHz(
-        filterState.notchCenterHz
-      )}`
-    );
-  }
 
   summary.textContent =
     details.join(" | ");
@@ -1339,18 +1538,20 @@ function updateSummary(
     "Inngang x[n] (grå) + utgang y[n] (svart)";
 }
 
+
 // -----------------------------------------------------------------------------
 // Refresh
 // -----------------------------------------------------------------------------
 
 function refresh() {
+  updateFilterControls();
   updateReadouts();
 
   const input =
     generateSignal();
 
   const filterState =
-    buildCombinedKernel();
+    buildFilter();
 
   const output =
     convolveSame(
@@ -1376,25 +1577,88 @@ function refresh() {
   );
 }
 
+
 // -----------------------------------------------------------------------------
 // Initialization
 // -----------------------------------------------------------------------------
 
 function init() {
-  for (
-    const control of
-      Object.values(controls)
-  ) {
-    control.addEventListener(
-      "input",
-      refresh
-    );
+  // Signal controls
+  controls.signalType.addEventListener(
+    "change",
+    refresh
+  );
 
-    control.addEventListener(
-      "change",
-      refresh
-    );
-  }
+  controls.f1.addEventListener(
+    "input",
+    refresh
+  );
+
+  controls.f2.addEventListener(
+    "input",
+    refresh
+  );
+
+  controls.noise.addEventListener(
+    "input",
+    refresh
+  );
+
+
+  // Filter selection
+  controls.filterType.addEventListener(
+    "change",
+    refresh
+  );
+
+
+  // Filter parameters
+  controls.cutoff.addEventListener(
+    "input",
+    refresh
+  );
+
+  controls.bandLow.addEventListener(
+    "input",
+    () => {
+      enforceBandLimits(
+        controls.bandLow
+      );
+
+      refresh();
+    }
+  );
+
+  controls.bandHigh.addEventListener(
+    "input",
+    () => {
+      enforceBandLimits(
+        controls.bandHigh
+      );
+
+      refresh();
+    }
+  );
+
+  controls.movingAverageLength.addEventListener(
+    "input",
+    refresh
+  );
+
+  controls.kernelLength.addEventListener(
+    "input",
+    refresh
+  );
+
+  controls.passes.addEventListener(
+    "input",
+    refresh
+  );
+
+
+  enforceBandLimits(
+    controls.bandHigh
+  );
 
   refresh();
 }

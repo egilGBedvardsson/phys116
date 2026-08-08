@@ -1,7 +1,27 @@
 #controls {
-  grid-template-columns: repeat(4, minmax(170px, 1fr));
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
   column-gap: 26px;
-  row-gap: 16px;
+  row-gap: 18px;
+
+  align-items: end;
+}
+
+.filter-parameter[hidden] {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  #controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  #controls {
+    grid-template-columns: 1fr;
+  }
 }
 
 select {
@@ -56,16 +76,4 @@ canvas {
 
 #outputCanvas {
   min-height: 360px;
-}
-
-@media (max-width: 1180px) {
-  #controls {
-    grid-template-columns: repeat(3, minmax(160px, 1fr));
-  }
-}
-
-@media (max-width: 920px) {
-  #controls {
-    grid-template-columns: repeat(2, minmax(150px, 1fr));
-  }
 }

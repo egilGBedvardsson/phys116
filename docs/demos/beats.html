@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../assets/css/design.css">
+  <link rel="stylesheet" href="../assets/css/demo.css">
+  <link rel="stylesheet" href="../assets/css/demos/beats.css">
+
+  <script src="../assets/js/demo-utils.js" defer></script>
+  <script src="../assets/js/demos/beats.js" defer></script>
+</head>
+
+<body class="demo-page">
+  <div id="container" class="demo-shell">
+
+    <section id="controls">
+      <div class="control">
+        <div class="row">
+          <label for="freq1Range">Frekvens 1</label>
+          <span id="freq1Val" class="value"></span>
+        </div>
+
+        <input
+          id="freq1Range"
+          class="slider"
+          type="range"
+          min="1"
+          max="16"
+          step="0.5"
+          value="5"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="freq2Range">Frekvens 2</label>
+          <span id="freq2Val" class="value"></span>
+        </div>
+
+        <input
+          id="freq2Range"
+          class="slider"
+          type="range"
+          min="1"
+          max="16"
+          step="0.5"
+          value="6"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="amplitudeRange">Amplitude</label>
+          <span id="amplitudeVal" class="value"></span>
+        </div>
+
+        <input
+          id="amplitudeRange"
+          class="slider"
+          type="range"
+          min="0.2"
+          max="1"
+          step="0.05"
+          value="0.7"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="speedRange">Hastighet</label>
+          <span id="speedVal" class="value"></span>
+        </div>
+
+        <input
+          id="speedRange"
+          class="slider"
+          type="range"
+          min="0.2"
+          max="3"
+          step="0.1"
+          value="1"
+        >
+      </div>
+    </section>
+
+    <canvas id="plot"></canvas>
+
+    <div id="top-banner" class="demo-footer">
+      <img
+        class="demo-footer-logo"
+        src="../assets/images/UiB_PositivEmblem.png"
+        alt="University logo"
+      >
+      <span>Universitetet i Bergen</span>
+      <span>PHYS 1116</span>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>FIR-filterdemo</title>
+
+  <link rel="stylesheet" href="../assets/css/design.css">
+  <link rel="stylesheet" href="../assets/css/demo.css">
+  <link rel="stylesheet" href="../assets/css/demos/fir.css">
+
+  <script src="../assets/js/demo-utils.js" defer></script>
+  <script src="../assets/js/demos/fir.js" defer></script>
+</head>
+
+<body class="demo-page">
+  <div id="page" class="demo-shell">
+
+    <section id="controls">
+
+      <div class="control">
+        <div class="row">
+          <label for="signalType">Signal</label>
+          <span class="value"></span>
+        </div>
+
+        <select id="signalType">
+          <option value="tone">Tone</option>
+          <option value="twoTone" selected>To toner</option>
+          <option value="square">Firkant</option>
+          <option value="chirp">Chirp</option>
+          <option value="impulse">Impuls</option>
+          <option value="noise">Støy</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="f1">Frekvens 1</label>
+          <span id="f1Val" class="value"></span>
+        </div>
+
+        <input
+          id="f1"
+          class="slider"
+          type="range"
+          min="4"
+          max="90"
+          step="1"
+          value="4"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="f2">Frekvens 2</label>
+          <span id="f2Val" class="value"></span>
+        </div>
+
+        <input
+          id="f2"
+          class="slider"
+          type="range"
+          min="6"
+          max="110"
+          step="1"
+          value="50"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="noise">Støy</label>
+          <span id="noiseVal" class="value"></span>
+        </div>
+
+        <input
+          id="noise"
+          class="slider"
+          type="range"
+          min="0"
+          max="0.8"
+          step="0.01"
+          value="0"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="kernelLength">Kernel-lengde</label>
+          <span id="kernelLengthVal" class="value"></span>
+        </div>
+
+        <input
+          id="kernelLength"
+          class="slider"
+          type="range"
+          min="5"
+          max="61"
+          step="2"
+          value="5"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="passes">Antall konvolusjoner</label>
+          <span id="passesVal" class="value"></span>
+        </div>
+
+        <input
+          id="passes"
+          class="slider"
+          type="range"
+          min="1"
+          max="4"
+          step="1"
+          value="1"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="smooth">Running average</label>
+          <span id="smoothVal" class="value"></span>
+        </div>
+
+        <input
+          id="smooth"
+          class="slider"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="0"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="low">Lavpass</label>
+          <span id="lowVal" class="value"></span>
+        </div>
+
+        <input
+          id="low"
+          class="slider"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="0"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="high">Høypass</label>
+          <span id="highVal" class="value"></span>
+        </div>
+
+        <input
+          id="high"
+          class="slider"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="0"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="band">Båndpass</label>
+          <span id="bandVal" class="value"></span>
+        </div>
+
+        <input
+          id="band"
+          class="slider"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="0"
+        >
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="notch">Notch-filter</label>
+          <span id="notchVal" class="value"></span>
+        </div>
+
+        <input
+          id="notch"
+          class="slider"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="0"
+        >
+      </div>
+
+    </section>
+
+    <div id="summary"></div>
+
+    <section id="output">
+
+      <canvas
+        id="outputCanvas"
+        width="1200"
+        height="360"
+      ></canvas>
+
+      <div id="plotLegend">
+        Inngang x[n] (grå) + utgang y[n] (svart)
+      </div>
+
+      <div id="subplots">
+
+        <canvas
+          id="impulseCanvas"
+          width="590"
+          height="220"
+        ></canvas>
+
+        <canvas
+          id="responseCanvas"
+          width="590"
+          height="220"
+        ></canvas>
+
+      </div>
+
+    </section>
+
+    <div id="top-banner" class="demo-footer">
+      <img
+        class="demo-footer-logo"
+        src="../assets/images/UiB_PositivEmblem.png"
+        alt="University logo"
+      >
+
+      <span>Universitetet i Bergen</span>
+      <span>PHYS 116</span>
+    </div>
+
+  </div>
+</body>
+</html>

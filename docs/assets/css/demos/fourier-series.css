@@ -1,0 +1,16 @@
+#controls {
+  grid-template-columns: repeat(3, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+#plot {
+  width: 100%;
+  min-height: 460px;
+  margin-top: 8px;
+}
+
+@media (max-width: 860px) {
+  #controls {
+    grid-template-columns: 1fr;
+  }
+}

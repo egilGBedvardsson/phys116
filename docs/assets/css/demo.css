@@ -1,0 +1,71 @@
+/* ==========================================================================
+   Shared styles for interactive course demos
+   ========================================================================== */
+
+:root {
+  --line: #d9d9d9;
+}
+
+
+/* --------------------------------------------------------------------------
+   Demo shell
+   -------------------------------------------------------------------------- */
+
+.demo-shell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+
+/* --------------------------------------------------------------------------
+   Controls
+   -------------------------------------------------------------------------- */
+
+#controls {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 18px 0 16px;
+
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+
+  display: grid;
+  align-items: end;
+}
+
+.control {
+  min-width: 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+
+  margin-bottom: 4px;
+}
+
+.control label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.slider,
+.control select {
+  width: 100%;
+}
+
+
+/* --------------------------------------------------------------------------
+   Canvas
+   -------------------------------------------------------------------------- */
+
+canvas {
+  display: block;
+
+  border: 1px solid var(--line);
+  background: var(--theme-surface-bg, #ffffff);
+}

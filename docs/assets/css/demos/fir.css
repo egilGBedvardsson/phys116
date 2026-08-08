@@ -1,6 +1,7 @@
 #controls {
   grid-template-columns: repeat(4, minmax(170px, 1fr));
-  gap: 12px 26px;
+  column-gap: 26px;
+  row-gap: 16px;
 }
 
 select {

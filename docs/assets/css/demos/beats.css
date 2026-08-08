@@ -1,6 +1,5 @@
 #controls {
   grid-template-columns: repeat(4, minmax(170px, 1fr));
-  gap: 12px;
 }
 
 #plot {

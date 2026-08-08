@@ -69,3 +69,20 @@ canvas {
   border: 1px solid var(--line);
   background: var(--theme-surface-bg, #ffffff);
 }
+
+.demo-page #controls {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 18px 0 16px;
+
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+
+  display: grid;
+
+  column-gap: 24px;
+  row-gap: 16px;
+
+  align-items: end;
+}

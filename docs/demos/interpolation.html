@@ -2,97 +2,30 @@
 <html lang="no">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Interpolasjon</title>
+
   <link rel="stylesheet" href="../assets/css/design.css">
-  <style>
-    :root {
-      --line: var(--plot-grid);
-      --text: var(--plot-text);
-      --panel: var(--color-surface-bg);
-    }
+  <link rel="stylesheet" href="../assets/css/demo.css">
+  <link rel="stylesheet" href="../assets/css/demos/interpolation.css">
 
-    body.demo-page {
-      background: var(--color-page-bg);
-      color: var(--color-text-primary);
-    }
-
-    #container {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-
-    #controls {
-      width: 100%;
-      padding: 18px 0 16px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: end;
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .control {
-      min-width: 0;
-      display: grid;
-      gap: 6px;
-    }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--color-text-primary);
-    }
-
-    select {
-      padding: 8px 10px;
-      border: 1px solid var(--plot-axis);
-      border-radius: 8px;
-      background: var(--panel);
-      color: var(--color-text-primary);
-      font: inherit;
-      min-width: 220px;
-    }
-
-    #plot {
-      width: 100%;
-      min-height: 420px;
-      margin-top: 8px;
-      border: 1px solid var(--line);
-      background: var(--plot-bg);
-      display: block;
-      overflow: visible;
-    }
-
-    .hint {
-      margin: 0;
-      font-size: 13px;
-      color: var(--color-text-muted);
-    }
-
-    @media (max-width: 860px) {
-      #controls {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      select {
-        min-width: 0;
-      }
-    }
-  </style>
+  <script src="../assets/js/demo-utils.js" defer></script>
+  <script src="../assets/js/demos/interpolation.js" defer></script>
 </head>
+
 <body class="demo-page">
   <div id="container" class="demo-shell">
+
     <section id="controls">
+
       <div class="control">
         <div class="row">
-          <label for="methodSelect">Interpoleringsmetode</label>
+          <label for="methodSelect">
+            Interpoleringsmetode
+          </label>
         </div>
+
         <select id="methodSelect">
           <option value="linear">Lineær</option>
           <option value="nearest">Nærmeste nabol</option>
@@ -101,248 +34,31 @@
           <option value="sinc">Sinc</option>
         </select>
       </div>
-      <p class="hint">Velg metode for å se hvordan verdiene mellom punktene blir tilnærmet.</p>
+
+      <p class="hint">
+        Velg metode for å se hvordan verdiene mellom punktene blir tilnærmet.
+      </p>
+
     </section>
 
-    <svg id="plot" viewBox="0 0 900 520" role="img" aria-label="Interpolasjon"></svg>
+    <svg
+      id="plot"
+      viewBox="0 0 900 520"
+      role="img"
+      aria-label="Interpolasjon"
+    ></svg>
 
     <div id="top-banner" class="demo-footer">
-      <img class="demo-footer-logo" src="../assets/images/UiB_PositivEmblem.png" alt="University logo" />
+      <img
+        class="demo-footer-logo"
+        src="../assets/images/UiB_PositivEmblem.png"
+        alt="University logo"
+      >
+
       <span>Universitetet i Bergen</span>
       <span>PHYS 116</span>
     </div>
+
   </div>
-
-  <script>
-    const plot = document.getElementById("plot");
-    const methodSelect = document.getElementById("methodSelect");
-    const rootStyles = getComputedStyle(document.documentElement);
-    const svgNS = "http://www.w3.org/2000/svg";
-
-    function resolveCssVar(name, fallback) {
-      const raw = rootStyles.getPropertyValue(name).trim();
-      if (!raw) return fallback;
-      if (raw.startsWith("var(") && raw.endsWith(")")) {
-        const inner = raw.slice(4, -1).trim();
-        const variableName = inner.split(",")[0].trim();
-        return resolveCssVar(`--${variableName.replace(/^--/, "")}`, fallback);
-      }
-      return raw;
-    }
-
-    const plotColors = {
-      bg: resolveCssVar("--plot-bg", "#ffffff"),
-      grid: resolveCssVar("--plot-grid", "#e4e4e4"),
-      axis: resolveCssVar("--plot-axis", "#b8b8b8"),
-      text: resolveCssVar("--plot-text", "#111111"),
-      muted: resolveCssVar("--plot-muted", "#666666"),
-      primary: resolveCssVar("--plot-primary", "#3b4cc0"),
-      secondary: resolveCssVar("--plot-secondary", "#d11141"),
-      tertiary: resolveCssVar("--plot-tertiary", "#488fa3")
-    };
-
-    const points = [
-      { x: 0, y: 0.2 },
-      { x: 0.5, y: 0.55 },
-      { x: 1, y: 0.8 },
-      { x: 1.5, y: 0.35 },
-      { x: 2, y: 0.25 },
-      { x: 2.5, y: 0.7 },
-      { x: 3, y: 0.95 },
-      { x: 3.5, y: 0.45 },
-      { x: 4, y: 0.4 },
-      { x: 4.5, y: 0.85 },
-      { x: 5, y: 1.0 }
-    ];
-
-    function createSvgEl(tag, attrs = {}) {
-      const el = document.createElementNS(svgNS, tag);
-      Object.entries(attrs).forEach(([key, value]) => {
-        el.setAttribute(key, value);
-      });
-      return el;
-    }
-
-    function sinc(value) {
-      return Math.abs(value) < 1e-8 ? 1 : Math.sin(Math.PI * value) / (Math.PI * value);
-    }
-
-    function interpolate(method, x) {
-      const first = points[0];
-      const last = points[points.length - 1];
-
-      if (x <= first.x) return first.y;
-      if (x >= last.x) return last.y;
-
-      let index = 0;
-      while (index < points.length - 1 && x > points[index + 1].x) {
-        index += 1;
-      }
-
-      const p0 = points[index];
-      const p1 = points[index + 1];
-      const span = p1.x - p0.x;
-      const t = span === 0 ? 0 : (x - p0.x) / span;
-
-      switch (method) {
-        case "nearest":
-          return t < 0.5 ? p0.y : p1.y;
-        case "cosine":
-          return p0.y + (p1.y - p0.y) * (1 - Math.cos(t * Math.PI)) / 2;
-        case "triangle": {
-          let numerator = 0;
-          let denominator = 0;
-          const spacing = 1;
-          points.forEach((point) => {
-            const distance = Math.abs(x - point.x);
-            const weight = Math.max(0, 1 - distance / spacing);
-            if (weight > 0) {
-              numerator += point.y * weight;
-              denominator += weight;
-            }
-          });
-          return denominator > 0 ? numerator / denominator : points[0].y;
-        }
-        case "sinc": {
-          let numerator = 0;
-          let denominator = 0;
-          const spacing = 1;
-          points.forEach((point) => {
-            const u = (x - point.x) / spacing;
-            const weight = sinc(u);
-            numerator += point.y * weight;
-            denominator += weight;
-          });
-          return denominator > 0 ? numerator / denominator : points[0].y;
-        }
-        case "linear":
-        default:
-          return p0.y + (p1.y - p0.y) * t;
-      }
-    }
-
-    function draw() {
-      plot.innerHTML = "";
-
-      const graphX = 40;
-      const graphY = 40;
-      const graphW = 820;
-      const graphH = 430;
-      const xMax = 5;
-
-      plot.appendChild(createSvgEl("rect", {
-        x: "0",
-        y: "0",
-        width: "900",
-        height: "520",
-        fill: plotColors.bg
-      }));
-
-      for (let i = 0; i <= 5; i += 1) {
-        const gx = graphX + (graphW * i) / 5;
-        plot.appendChild(createSvgEl("line", {
-          x1: gx,
-          y1: graphY,
-          x2: gx,
-          y2: graphY + graphH,
-          stroke: plotColors.grid,
-          "stroke-width": "1"
-        }));
-      }
-      for (let i = 0; i <= 4; i += 1) {
-        const gy = graphY + (graphH * i) / 4;
-        plot.appendChild(createSvgEl("line", {
-          x1: graphX,
-          y1: gy,
-          x2: graphX + graphW,
-          y2: gy,
-          stroke: plotColors.grid,
-          "stroke-width": "1"
-        }));
-      }
-
-      plot.appendChild(createSvgEl("rect", {
-        x: graphX,
-        y: graphY,
-        width: graphW,
-        height: graphH,
-        fill: "none",
-        stroke: plotColors.axis,
-        "stroke-width": "1.2"
-      }));
-
-      const method = methodSelect.value;
-      const samples = 220;
-      const path = [];
-      for (let i = 0; i <= samples; i += 1) {
-        const x = points[0].x + ((points[points.length - 1].x - points[0].x) * i) / samples;
-        const y = interpolate(method, x);
-        path.push({ x, y });
-      }
-
-      const pathData = path.map((p) => {
-        const px = graphX + (p.x / xMax) * graphW;
-        const py = graphY + graphH - (p.y / 1.0) * graphH;
-        return `${px.toFixed(2)},${py.toFixed(2)}`;
-      }).join(" ");
-
-      plot.appendChild(createSvgEl("polyline", {
-        points: pathData,
-        fill: "none",
-        stroke: plotColors.primary,
-        "stroke-width": "2.2"
-      }));
-
-      points.forEach((p) => {
-        const px = graphX + (p.x / xMax) * graphW;
-        const py = graphY + graphH - (p.y / 1.0) * graphH;
-        plot.appendChild(createSvgEl("circle", {
-          cx: px,
-          cy: py,
-          r: "5",
-          fill: plotColors.tertiary
-        }));
-        plot.appendChild(createSvgEl("text", {
-          x: px + 8,
-          y: py - 6,
-          fill: plotColors.text,
-          "font-size": "12",
-          "font-family": "sans-serif"
-        })).textContent = `(${p.x.toFixed(0)}, ${p.y.toFixed(2)})`;
-      });
-
-      plot.appendChild(createSvgEl("text", {
-        x: graphX + 10,
-        y: graphY + 20,
-        fill: plotColors.text,
-        "font-size": "13",
-        "font-family": "sans-serif"
-      })).textContent = "Interpolert kurve";
-
-      plot.appendChild(createSvgEl("text", {
-        x: graphX + 170,
-        y: graphY + 20,
-        fill: plotColors.secondary,
-        "font-size": "13",
-        "font-family": "sans-serif"
-      })).textContent = "Sample-punkter";
-
-      plot.appendChild(createSvgEl("text", {
-        x: graphX + 10,
-        y: graphY + graphH + 24,
-        fill: plotColors.muted,
-        "font-size": "13",
-        "font-family": "sans-serif"
-      })).textContent = `Metode: ${methodSelect.options[methodSelect.selectedIndex].text}`;
-    }
-
-    function init() {
-      methodSelect.addEventListener("change", draw);
-      window.addEventListener("resize", draw);
-      draw();
-    }
-
-    init();
-  </script>
 </body>
 </html>

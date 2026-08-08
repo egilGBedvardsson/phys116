@@ -1,0 +1,71 @@
+:root {
+  --line: var(--plot-grid);
+  --panel: var(--color-surface-bg);
+}
+
+body.demo-page {
+  background: var(--color-page-bg);
+  color: var(--color-text-primary);
+}
+
+#controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+
+.control {
+  display: grid;
+  gap: 6px;
+}
+
+.row {
+  gap: 10px;
+
+  color: var(--color-text-primary);
+}
+
+select {
+  min-width: 220px;
+
+  padding: 8px 10px;
+
+  border: 1px solid var(--plot-axis);
+  border-radius: 8px;
+
+  background: var(--panel);
+  color: var(--color-text-primary);
+
+  font: inherit;
+}
+
+#plot {
+  display: block;
+  overflow: visible;
+
+  width: 100%;
+  min-height: 420px;
+  margin-top: 8px;
+
+  border: 1px solid var(--line);
+  background: var(--plot-bg);
+}
+
+.hint {
+  margin: 0;
+
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 860px) {
+  #controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  select {
+    min-width: 0;
+  }
+}

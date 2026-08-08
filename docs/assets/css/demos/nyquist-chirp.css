@@ -1,0 +1,15 @@
+#controls {
+  grid-template-columns: minmax(250px, 1fr);
+  gap: 12px;
+}
+
+#plot {
+  width: 100%;
+  min-height: 750px;
+  margin-top: 12px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--line);
+  background: var(--theme-surface-bg, #ffffff);
+}

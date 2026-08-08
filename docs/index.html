@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>PHYS 116 · Demoportal</title>
+
   <script>
-    // Ensure relative asset paths resolve correctly if URL is opened as /docs (without trailing slash).
+    /*
+     * Relative paths break if GitHub Pages serves this page as /docs
+     * instead of /docs/. Normalize the URL before loading assets.
+     */
     if (window.location.pathname.endsWith("/docs")) {
-      window.location.replace(`${window.location.pathname}/${window.location.search}${window.location.hash}`);
+      window.location.replace(
+        `${window.location.pathname}/${window.location.search}${window.location.hash}`
+      );
     }
   </script>
-  <link rel="stylesheet" href="./assets/css/design.css" />
+
+  <link rel="stylesheet" href="./assets/css/design.css">
+
   <script>
     window.MathJax = {
       tex: {
@@ -18,326 +27,240 @@
         displayMath: [["\\[", "\\]"]]
       },
       options: {
-        skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+        skipHtmlTags: [
+          "script",
+          "noscript",
+          "style",
+          "textarea",
+          "pre",
+          "code"
+        ]
       }
     };
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  ></script>
+
+  <script
+    defer
+    src="./assets/js/portal.js"
+  ></script>
 </head>
+
 <body class="portal-body">
+
   <main class="page">
+
     <section class="finder-window">
-      <header class="window-bar" role="banner">
+
+      <header class="window-bar">
         <div class="window-title-wrap">
-          <h1 class="window-title">Signal og Systemanalyse</h1>
+          <h1 class="window-title">
+            Signal og Systemanalyse
+          </h1>
         </div>
-        <p class="window-path" id="windowPath">PHYS 116 / Hjem</p>
+
+        <p
+          id="windowPath"
+          class="window-path"
+        >
+          PHYS 116 / Hjem
+        </p>
       </header>
 
-      <section class="window-main">
+
+      <div class="window-main">
+
+        <!-- ===============================================================
+             Sidebar
+             =============================================================== -->
+
         <aside class="sidebar">
-          <button class="sidebar-top sidebar-home-btn" type="button" data-demo="home" aria-label="Gå til hjem">
-            <img class="sidebar-logo" src="./assets/images/UiB_PositivEmblem.png" alt="UiB-logo" />
-            <div>
-              <p class="sidebar-school">Universitetet i Bergen</p>
-              <p class="sidebar-course">Forside</p>
-            </div>
+
+          <button
+            class="sidebar-top sidebar-home-btn"
+            type="button"
+            data-demo="home"
+            aria-label="Gå til hjem"
+          >
+            <img
+              class="sidebar-logo"
+              src="./assets/images/UiB_PositivEmblem.png"
+              alt="UiB-logo"
+            >
+
+            <span>
+              <span class="sidebar-school">
+                Universitetet i Bergen
+              </span>
+
+              <span class="sidebar-course">
+                Forside
+              </span>
+            </span>
           </button>
 
-          <p class="sidebar-label">Innhold</p>
-          <nav class="demo-list" aria-label="Demoliste">
-            <button class="demo-btn" data-demo="nyquist">Nyquist</button>
-            <button class="demo-btn" data-demo="firkantsignal">Konjugatsymmetri</button>
-            <button class="demo-btn" data-demo="fir">FIR-filter</button>
-            <button class="demo-btn" data-demo="pz">Pol-null</button>
-            <button class="demo-btn" data-demo="fourier">Fourier-serie</button>
-            <button class="demo-btn" data-demo="beats">Beats</button>
-            <button class="demo-btn" data-demo="interpolation">Interpolasjon</button>
+          <p class="sidebar-label">
+            Innhold
+          </p>
+
+          <nav
+            class="demo-list"
+            aria-label="Demoliste"
+          >
+            <button
+              class="demo-btn"
+              type="button"
+              data-demo="nyquist"
+            >
+              Nyquist
+            </button>
+
+            <button
+              class="demo-btn"
+              type="button"
+              data-demo="firkantsignal"
+            >
+              Konjugatsymmetri
+            </button>
+
+            <button
+              class="demo-btn"
+              type="button"
+              data-demo="fir"
+            >
+              FIR-filter
+            </button>
+
+            <button
+              class="demo-btn"
+              type="button"
+              data-demo="pz"
+            >
+              Pol-null
+            </button>
+
+            <button
+              class="demo-btn"
+              type="button"
+              data-demo="fourier"
+            >
+              Fourier-serie
+            </button>
+
+            <button
+              class="demo-btn"
+              type="button"
+              data-demo="beats"
+            >
+              Beats
+            </button>
+
+            <button
+              class="demo-btn"
+              type="button"
+              data-demo="interpolation"
+            >
+              Interpolasjon
+            </button>
           </nav>
+
         </aside>
 
+
+        <!-- ===============================================================
+             Reader
+             =============================================================== -->
+
         <section class="reader">
+
           <div class="reader-toolbar">
-            <p class="reader-breadcrumb" id="readerBreadcrumb">Hjem</p>
-            <a id="openExternal" class="open-link" href="#" target="_blank" rel="noopener noreferrer" hidden>
+
+            <p
+              id="readerBreadcrumb"
+              class="reader-breadcrumb"
+            >
+              Hjem
+            </p>
+
+            <a
+              id="openExternal"
+              class="open-link"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              hidden
+            >
               Åpne demo i ny fane
             </a>
+
           </div>
 
-          <article class="card" id="viewerCard">
-            <div class="viewer-head">
-              <h2 class="viewer-title" id="viewerTitle">Hjem</h2>
-            </div>
+
+          <article class="card">
+
+            <header class="viewer-head">
+              <h2
+                id="viewerTitle"
+                class="viewer-title"
+              >
+                Hjem
+              </h2>
+            </header>
+
+
             <div class="viewer-stage">
-              <div class="stage-doc">
-                <p class="doc-editor-label">Dokumenttekst</p>
-                <div id="docContent" class="doc-content"></div>
-              </div>
-              <div class="stage-demo">
-                <div class="empty" id="emptyState"></div>
-                <iframe id="demoFrame" title="Demo"></iframe>
-              </div>
+
+              <section class="stage-doc">
+                <p class="doc-editor-label">
+                  Dokumenttekst
+                </p>
+
+                <div
+                  id="docContent"
+                  class="doc-content"
+                ></div>
+              </section>
+
+
+              <section class="stage-demo">
+
+                <div
+                  id="emptyState"
+                  class="empty"
+                ></div>
+
+                <iframe
+                  id="demoFrame"
+                  title="Interaktiv demo"
+                ></iframe>
+
+              </section>
+
             </div>
+
           </article>
+
         </section>
-      </section>
+
+      </div>
+
     </section>
+
   </main>
-  <button id="toTopBtn" class="to-top-btn" type="button" aria-label="Til toppen">
+
+
+  <button
+    id="toTopBtn"
+    class="to-top-btn"
+    type="button"
+    aria-label="Til toppen"
+  >
     Til toppen
   </button>
 
-  <script>
-    // Bump this string when demo assets change to avoid stale GitHub Pages/browser cache.
-    const DEMO_ASSET_VERSION = "20260405-nyquist-fix";
-
-    // Central registry for navigation, iframe source, and document fragments.
-    const demos = {
-      home: {
-        title: "Interaktive demoer i PHYS 116",
-        path: "PHYS 116 / Hjem",
-        src: null,
-        doc: "./content/home.html"
-      },
-      nyquist: {
-        title: "Sampling, Nyquist og folding",
-        path: "PHYS 116 / Demoer / Nyquist Chirp",
-        src: "./demos/nyquist_chirp.html",
-        doc: "./content/nyquist.html"
-      },
-      firkantsignal: {
-        title: "Firkantsignal og konjugatsymmetri",
-        path: "PHYS 116 / Demoer / Firkantsignal og konjugatsymmetri",
-        src: "./demos/firkantsignal_konjugatsymmetri.html",
-        doc: "./content/firkantsignal_konjugatsymmetri.html"
-      },
-      fir: {
-        title: "Finite Impulse Respons Filter",
-        path: "PHYS 116 / Demoer / FIR-filter",
-        src: "./demos/fir.html",
-        doc: "./content/fir.html"
-      },
-      pz: {
-        title: "Poler, nuller og frekvensrespons",
-        path: "PHYS 116 / Demoer / Pol-null-editor",
-        src: "./demos/pz_editor.html",
-        doc: "./content/pz.html"
-      },
-      fourier: {
-        title: "Interaktiv Fourier-serie",
-        path: "PHYS 116 / Demoer / Fourier-serie",
-        src: "./demos/fourier_series.html",
-        doc: "./content/fourier_series.html"
-      },
-      beats: {
-        title: "Beats og interferens",
-        path: "PHYS 116 / Demoer / Beats",
-        src: "./demos/beats.html",
-        doc: "./content/beats.html"
-      },
-      interpolation: {
-        title: "Interpolasjon mellom punkter",
-        path: "PHYS 116 / Demoer / Interpolasjon",
-        src: "./demos/interpolation.html",
-        doc: "./content/interpolation.html"
-      }
-    };
-
-    const buttons = Array.from(document.querySelectorAll(".demo-btn"));
-    const viewerTitle = document.getElementById("viewerTitle");
-    const docContent = document.getElementById("docContent");
-    const emptyState = document.getElementById("emptyState");
-    const frame = document.getElementById("demoFrame");
-    const openExternal = document.getElementById("openExternal");
-    const readerBreadcrumb = document.getElementById("readerBreadcrumb");
-    const windowPath = document.getElementById("windowPath");
-    const toTopBtn = document.getElementById("toTopBtn");
-    const sidebarHomeBtn = document.querySelector(".sidebar-home-btn");
-    let frameResizeObserver = null;
-    let lastMeasuredFrameHeight = 0;
-    let docLoadToken = 0;
-    const docCache = new Map();
-
-    function withAssetVersion(src) {
-      if (!src) return src;
-      const joiner = src.includes("?") ? "&" : "?";
-      return `${src}${joiner}v=${encodeURIComponent(DEMO_ASSET_VERSION)}`;
-    }
-
-    function typesetDocContent() {
-      if (window.MathJax && typeof window.MathJax.typesetPromise === "function") {
-        return window.MathJax.typesetPromise([docContent]).catch(() => {});
-      }
-      return Promise.resolve();
-    }
-
-    // Fetches per-demo document markup and avoids stale async writes via token checks.
-    async function renderDocContent(key) {
-      const demo = demos[key] || demos.home;
-      const docPath = demo.doc || demos.home.doc;
-      const token = ++docLoadToken;
-      docContent.innerHTML = "<p class=\"doc-muted\">Laster dokument...</p>";
-
-      let markup = docCache.get(docPath);
-      if (markup === undefined) {
-        try {
-          const response = await fetch(docPath);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          markup = await response.text();
-          docCache.set(docPath, markup);
-        } catch (error) {
-          markup = "<p class=\"doc-muted\">Kunne ikke laste dokumentteksten.</p>";
-        }
-      }
-
-      if (token !== docLoadToken) return;
-      docContent.innerHTML = markup;
-      await typesetDocContent();
-    }
-
-    function updateFrameHeight() {
-      try {
-        const doc = frame.contentDocument;
-        if (!doc) return;
-
-        // Measure the actual demo container to avoid feedback loops with iframe viewport height.
-        const demoShell = doc.querySelector(".demo-shell");
-        const html = doc.documentElement;
-        const body = doc.body;
-        const nextHeight = Math.ceil(
-          demoShell
-            ? demoShell.getBoundingClientRect().height
-            : Math.max(
-                body ? body.scrollHeight : 0,
-                html ? html.scrollHeight : 0
-              )
-        );
-
-        if (nextHeight > 0 && Math.abs(nextHeight - lastMeasuredFrameHeight) > 2) {
-          frame.style.height = `${nextHeight}px`;
-          lastMeasuredFrameHeight = nextHeight;
-        }
-      } catch (error) {
-        // Same-origin demos are expected; ignore if frame is not readable.
-      }
-    }
-
-    // Keeps iframe height synced to demo content after load and dynamic redraws.
-    function connectFrameAutoHeight() {
-      if (frameResizeObserver) {
-        frameResizeObserver.disconnect();
-        frameResizeObserver = null;
-      }
-
-      const doc = frame.contentDocument;
-      if (!doc) return;
-
-      updateFrameHeight();
-      window.requestAnimationFrame(updateFrameHeight);
-      window.setTimeout(updateFrameHeight, 120);
-      window.setTimeout(updateFrameHeight, 420);
-
-      if ("ResizeObserver" in window) {
-        frameResizeObserver = new ResizeObserver(updateFrameHeight);
-        const observedTarget = doc.querySelector(".demo-shell") || doc.body || doc.documentElement;
-        if (observedTarget) frameResizeObserver.observe(observedTarget);
-      }
-    }
-
-    frame.addEventListener("load", connectFrameAutoHeight);
-    window.addEventListener("resize", updateFrameHeight, { passive: true });
-
-    function setActiveButton(key) {
-      buttons.forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.demo === key);
-      });
-    }
-
-    function loadDemo(key, pushHash = true) {
-      const demo = demos[key];
-      if (!demo) return;
-
-      viewerTitle.textContent = demo.title;
-      readerBreadcrumb.textContent = demo.path;
-      windowPath.textContent = demo.path;
-      renderDocContent(key);
-
-      if (demo.src) {
-        const resolvedSrc = withAssetVersion(demo.src);
-        frame.style.display = "block";
-        emptyState.hidden = true;
-
-        if (frame.getAttribute("src") !== resolvedSrc) {
-          frame.setAttribute("src", resolvedSrc);
-        } else {
-          updateFrameHeight();
-        }
-
-        openExternal.hidden = false;
-        openExternal.href = resolvedSrc;
-      } else {
-        if (frameResizeObserver) {
-          frameResizeObserver.disconnect();
-          frameResizeObserver = null;
-        }
-        frame.style.display = "none";
-        frame.style.height = "0";
-        lastMeasuredFrameHeight = 0;
-        frame.removeAttribute("src");
-        emptyState.hidden = false;
-        emptyState.innerHTML = "Velg et dokument fra sidepanelet for å starte.";
-        openExternal.hidden = true;
-        openExternal.removeAttribute("href");
-      }
-
-      setActiveButton(key);
-
-      if (pushHash) {
-        const params = new URLSearchParams(location.hash.slice(1));
-        params.set("demo", key);
-        location.hash = params.toString();
-      }
-    }
-
-    buttons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        loadDemo(btn.dataset.demo);
-      });
-    });
-
-    if (sidebarHomeBtn) {
-      sidebarHomeBtn.addEventListener("click", () => {
-        loadDemo("home");
-      });
-    }
-
-    function loadFromHash() {
-      const params = new URLSearchParams(location.hash.slice(1));
-      let key = params.get("demo");
-      if (key === "square") {
-        key = "firkantsignal";
-      }
-      if (key && demos[key]) {
-        loadDemo(key, false);
-      } else {
-        loadDemo("home", false);
-      }
-    }
-
-    window.addEventListener("hashchange", loadFromHash);
-    loadFromHash();
-
-    function updateToTopButton() {
-      const shouldShow = window.scrollY > 280;
-      toTopBtn.classList.toggle("visible", shouldShow);
-    }
-
-    toTopBtn.addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-
-    window.addEventListener("scroll", updateToTopButton, { passive: true });
-    updateToTopButton();
-  </script>
 </body>
 </html>

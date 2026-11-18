@@ -6,12 +6,12 @@
 
   <title>Fourier-rekker</title>
 
-  <link rel="stylesheet" href="../assets/css/design.css">
-  <link rel="stylesheet" href="../assets/css/demo.css">
-  <link rel="stylesheet" href="../assets/css/demos/fourier-series.css">
+  <link rel="stylesheet" href="../assets/css/design.css?v=20261118-standardized-demos">
+  <link rel="stylesheet" href="../assets/css/demo.css?v=20261118-standardized-demos">
+  <link rel="stylesheet" href="../assets/css/demos/fourier-series.css?v=20261118-standardized-demos">
 
-  <script src="../assets/js/demo-utils.js" defer></script>
-  <script src="../assets/js/demos/fourier-series.js" defer></script>
+  <script src="../assets/js/demo-utils.js?v=20261118-standardized-demos" defer></script>
+  <script src="../assets/js/demos/fourier-series.js?v=20261118-standardized-demos" defer></script>
   
 </head>
 
@@ -73,7 +73,9 @@
       <button id="pauseBtn" type="button" aria-pressed="false">Pause</button>
       <button id="resetBtn" type="button">Start på nytt</button>
     </div>
-    <canvas id="plot" role="img" aria-label="Fourier-rekke med roterende harmoniske bidrag" aria-describedby="plotDescription">Roterende harmoniske bidrag og summen av dem som en periodisk kurve.</canvas>
+    <div id="plotHost" class="canvas-host">
+      <canvas id="plot" role="img" aria-label="Fourier-rekke med roterende harmoniske bidrag" aria-describedby="plotDescription">Roterende harmoniske bidrag og summen av dem som en periodisk kurve.</canvas>
+    </div>
     <p id="plotDescription" class="sr-only">Roterende harmoniske bidrag og summen av dem som en periodisk kurve.</p>
     <p id="signalReadout" class="demo-readout" aria-live="polite"></p>
 

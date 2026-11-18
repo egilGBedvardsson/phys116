@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Beats</title>
 
-  <link rel="stylesheet" href="../assets/css/design.css">
-  <link rel="stylesheet" href="../assets/css/demo.css">
-  <link rel="stylesheet" href="../assets/css/demos/beats.css">
+  <link rel="stylesheet" href="../assets/css/design.css?v=20261118-standardized-demos">
+  <link rel="stylesheet" href="../assets/css/demo.css?v=20261118-standardized-demos">
+  <link rel="stylesheet" href="../assets/css/demos/beats.css?v=20261118-standardized-demos">
 
-  <script src="../assets/js/demo-utils.js" defer></script>
-  <script src="../assets/js/demos/beats.js" defer></script>
+  <script src="../assets/js/demo-utils.js?v=20261118-standardized-demos" defer></script>
+  <script src="../assets/js/demos/beats.js?v=20261118-standardized-demos" defer></script>
 </head>
 
 <body class="demo-page">
@@ -70,7 +70,9 @@
       <button id="pauseBtn" type="button" aria-pressed="false">Pause</button>
       <button id="resetBtn" type="button">Start på nytt</button>
     </div>
-    <canvas id="plot" role="img" aria-label="To sinussignaler med amplitudeomslag" aria-describedby="plotDescription">Summen av to sinussignaler med rødt amplitudeomslag.</canvas>
+    <div id="plotHost" class="canvas-host">
+      <canvas id="plot" role="img" aria-label="To sinussignaler med amplitudeomslag" aria-describedby="plotDescription">Summen av to sinussignaler med rødt amplitudeomslag.</canvas>
+    </div>
     <p id="plotDescription" class="sr-only">Summen av to sinussignaler med rødt amplitudeomslag.</p>
     <p id="signalReadout" class="demo-readout" aria-live="polite"></p>
 

@@ -64,75 +64,61 @@ const DemoUtils = {
   },
 
   prepareCanvas(canvas, existingContext) {
-    const rect =
-      canvas.getBoundingClientRect();
+    // The .canvas-host controls display size. Bitmap dimensions never size it.
+    // clientWidth/clientHeight exclude borders; never fall back to the bitmap.
+    const width = Math.max(1, canvas.clientWidth);
+    const height = Math.max(1, canvas.clientHeight);
+    const dpr = window.devicePixelRatio || 1;
+    const pixelWidth = Math.max(1, Math.round(width * dpr));
+    const pixelHeight = Math.max(1, Math.round(height * dpr));
 
-    const width =
-      rect.width || canvas.clientWidth || canvas.width;
+    if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+    if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
 
-    const height =
-      rect.height || canvas.clientHeight || canvas.height;
+    const context = existingContext || canvas.getContext("2d");
+    context.setTransform(pixelWidth / width, 0, 0, pixelHeight / height, 0, 0);
+    context.setLineDash([]);
+    context.lineWidth = 1;
+    context.textAlign = "left";
+    context.textBaseline = "alphabetic";
 
-    const dpr =
-      window.devicePixelRatio || 1;
-
-    canvas.width =
-      Math.max(
-        1,
-        Math.round(width * dpr)
-      );
-
-    canvas.height =
-      Math.max(
-        1,
-        Math.round(height * dpr)
-      );
-
-    const context =
-      existingContext ||
-      canvas.getContext("2d");
-
-    context.setTransform(
-      dpr,
-      0,
-      0,
-      dpr,
-      0,
-      0
-    );
-
-    return {
-      ctx: context,
-      width,
-      height,
-      dpr
-    };
+    return { ctx: context, width, height, dpr };
   },
 
   observeResize(element, callback) {
-    if ("ResizeObserver" in window) {
-      const observer =
-        new ResizeObserver(callback);
-
-      observer.observe(element);
-
-      return () => observer.disconnect();
-    }
-
-    window.addEventListener(
-      "resize",
-      callback,
-      {
-        passive: true
-      }
-    );
-
-    return () => {
-      window.removeEventListener(
-        "resize",
-        callback
-      );
+    let frame = 0;
+    let previousSize = "";
+    const schedule = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const size = `${element.clientWidth}:${element.clientHeight}:${window.devicePixelRatio || 1}`;
+        if (size === previousSize) return;
+        previousSize = size;
+        callback();
+      });
     };
+    const observer = "ResizeObserver" in window ? new ResizeObserver(schedule) : null;
+    observer?.observe(element);
+    // Also catch display scale changes that leave the CSS dimensions unchanged.
+    window.addEventListener("resize", schedule, { passive: true });
+    schedule();
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", schedule);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  },
+
+  setLayoutSizes(sizes) {
+    for (const [name, value] of Object.entries(sizes)) {
+      document.documentElement.style.setProperty(name,
+        typeof value === "number" ? `${value}px` : value);
+    }
+  },
+
+  cssHeight({ min, preferredVw, max }) {
+    return `clamp(${min}px, ${preferredVw}vw, ${max}px)`;
   },
 
   measureElementWidth(element, minimum = 1) {

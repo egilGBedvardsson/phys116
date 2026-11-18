@@ -31,7 +31,8 @@
 
 #output {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 12px;
 
   padding-bottom: 8px;
@@ -54,29 +55,21 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  min-width: 0;
 }
 
-canvas {
-  width: 100%;
+#outputPlot {
+  height: var(--time-plot-height);
 }
 
-#outputCanvas {
-  height: 220px;
-}
-
-#impulseCanvas,
-#responseCanvas {
-  height: 170px;
+#impulsePlot,
+#responsePlot {
+  height: var(--filter-plot-height);
 }
 
 @media (max-width: 640px) {
-  #outputCanvas {
-    height: 210px;
-  }
-
-  #impulseCanvas,
-  #responseCanvas {
-    height: 170px;
+  #outputPlot {
+    height: var(--mobile-time-plot-height);
   }
 
   #subplots { grid-template-columns: 1fr; }
@@ -84,9 +77,22 @@ canvas {
 
 /* Give the time plot and filter plots one shared row on laptop screens. */
 @media (min-width: 760px) {
-  #output { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px 12px; }
-  #outputCanvas { grid-column: 1; grid-row: 1; height: 280px; }
-  #subplots { grid-column: 2; grid-row: 1; grid-template-columns: 1fr; gap: 8px; }
-  #impulseCanvas, #responseCanvas { height: 136px; }
+  .filter-demo { grid-template-rows: auto auto minmax(var(--output-min-height), 1fr) auto; }
+  #output {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-height: 0;
+    gap: 8px 12px;
+  }
+  #outputPlot { grid-column: 1; grid-row: 1; height: auto; }
+  #subplots {
+    grid-column: 2;
+    grid-row: 1;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    min-height: 0;
+    gap: 8px;
+  }
+  #impulsePlot, #responsePlot { height: auto; }
   #plotLegend { grid-column: 1 / -1; grid-row: 2; }
 }

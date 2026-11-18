@@ -6,16 +6,16 @@
 
   <title>FIR-filterdemo</title>
 
-  <link rel="stylesheet" href="../assets/css/design.css">
-  <link rel="stylesheet" href="../assets/css/demo.css">
-  <link rel="stylesheet" href="../assets/css/demos/fir.css">
+  <link rel="stylesheet" href="../assets/css/design.css?v=20261118-standardized-demos">
+  <link rel="stylesheet" href="../assets/css/demo.css?v=20261118-standardized-demos">
+  <link rel="stylesheet" href="../assets/css/demos/fir.css?v=20261118-standardized-demos">
 
-  <script src="../assets/js/demo-utils.js" defer></script>
-  <script src="../assets/js/demos/fir.js" defer></script>
+  <script src="../assets/js/demo-utils.js?v=20261118-standardized-demos" defer></script>
+  <script src="../assets/js/demos/fir.js?v=20261118-standardized-demos" defer></script>
 </head>
 
 <body class="demo-page">
-  <div id="container" class="demo-shell">
+  <div id="container" class="demo-shell filter-demo">
     <section id="controls">
 
   <!-- Signal ------------------------------------------------------------- -->
@@ -264,11 +264,11 @@
 
     <section id="output">
 
-      <canvas
-        id="outputCanvas" role="img" aria-label="Inngang og forsinkelseskompensert utgang som funksjon av tid." aria-describedby="summary"
-        width="1200"
-        height="360"
-      ></canvas>
+      <div id="outputPlot" class="canvas-host">
+        <canvas
+          id="outputCanvas" role="img" aria-label="Inngang og forsinkelseskompensert utgang som funksjon av tid." aria-describedby="summary"
+        ></canvas>
+      </div>
 
       <div id="plotLegend">
         Inngang x[n] (grå) + utgang y[n] (svart)
@@ -276,17 +276,17 @@
 
       <div id="subplots">
 
-        <canvas
-          id="impulseCanvas" role="img" aria-label="Filterets impulsrespons som funksjon av sampleindeks." aria-describedby="summary"
-          width="590"
-          height="220"
-        ></canvas>
+        <div id="impulsePlot" class="canvas-host">
+          <canvas
+            id="impulseCanvas" role="img" aria-label="Filterets impulsrespons som funksjon av sampleindeks." aria-describedby="summary"
+          ></canvas>
+        </div>
 
-        <canvas
-          id="responseCanvas" role="img" aria-label="Filterets magnituderespons i dB som funksjon av frekvens." aria-describedby="summary"
-          width="590"
-          height="220"
-        ></canvas>
+        <div id="responsePlot" class="canvas-host">
+          <canvas
+            id="responseCanvas" role="img" aria-label="Filterets magnituderespons i dB som funksjon av frekvens." aria-describedby="summary"
+          ></canvas>
+        </div>
 
       </div>
 

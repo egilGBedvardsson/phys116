@@ -3,9 +3,8 @@
     repeat(2, minmax(0, 1fr));
 }
 
-#plot {
-  width: 100%;
-  height: clamp(240px, 32vw, 320px);
+#plotHost {
+  height: var(--plot-height);
 }
 
 @media (max-width: 520px) {

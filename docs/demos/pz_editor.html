@@ -6,16 +6,16 @@
 
   <title>Poler og nuller</title>
 
-  <link rel="stylesheet" href="../assets/css/design.css">
-  <link rel="stylesheet" href="../assets/css/demo.css">
-  <link rel="stylesheet" href="../assets/css/demos/pz-editor.css">
+  <link rel="stylesheet" href="../assets/css/design.css?v=20261118-standardized-demos">
+  <link rel="stylesheet" href="../assets/css/demo.css?v=20261118-standardized-demos">
+  <link rel="stylesheet" href="../assets/css/demos/pz-editor.css?v=20261118-standardized-demos">
 
-  <script src="../assets/js/demo-utils.js" defer></script>
-  <script src="../assets/js/demos/pz-editor.js" defer></script>
+  <script src="../assets/js/demo-utils.js?v=20261118-standardized-demos" defer></script>
+  <script src="../assets/js/demos/pz-editor.js?v=20261118-standardized-demos" defer></script>
 </head>
 
 <body class="demo-page">
-  <div id="page" class="demo-shell">
+  <div id="page" class="demo-shell filter-demo">
 
     <section id="controls">
 
@@ -94,7 +94,9 @@
 
       <article class="panel">
         <h3>Poler og nuller i z-planet</h3>
-        <canvas id="pzCanvas" role="img" aria-describedby="status">Poler og nuller i z-planet. Bruk punkteditoren for tastaturbetjening.</canvas>
+        <div id="pzPlot" class="canvas-host">
+          <canvas id="pzCanvas" role="img" aria-describedby="status">Poler og nuller i z-planet. Bruk punkteditoren for tastaturbetjening.</canvas>
+        </div>
       </article>
 
       <article id="plots">
@@ -104,10 +106,12 @@
             Magnituderespons (K = 1), |H(e<sup>jω</sup>)| i dB
           </h4>
 
-          <canvas
-            id="magCanvas" aria-label="Absolutt magnituderespons i dB"
-            class="plot-canvas" role="img" aria-describedby="status"
-          ></canvas>
+          <div id="magnitudePlot" class="canvas-host response-plot">
+            <canvas
+              id="magCanvas" aria-label="Absolutt magnituderespons i dB"
+              role="img" aria-describedby="status"
+            ></canvas>
+          </div>
         </section>
 
         <section class="plot-wrap">
@@ -115,10 +119,12 @@
             Faserespons ∠H(e<sup>jω</sup>) i rad
           </h4>
 
-          <canvas
-            id="phaseCanvas" aria-label="Utfoldet faserespons i radianer"
-            class="plot-canvas" role="img" aria-describedby="status"
-          ></canvas>
+          <div id="phasePlot" class="canvas-host response-plot">
+            <canvas
+              id="phaseCanvas" aria-label="Utfoldet faserespons i radianer"
+              role="img" aria-describedby="status"
+            ></canvas>
+          </div>
         </section>
 
       </article>

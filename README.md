@@ -40,6 +40,14 @@ Most pages can be opened directly from disk, but a local server is the best way 
 
 Keep educational formulas, signal-processing logic, renderer setup, and demo-specific math close to the demo that uses them. Move code into `demo-utils.js` only when multiple demos clearly share the same browser or layout behavior.
 
+## Canvas Sizing
+
+Display dimensions and plot margins are configured in `LAYOUT` near the top of each demo script. Native canvases fill a `.canvas-host` whose size is controlled by CSS; their bitmap dimensions never determine the surrounding layout. Use `DemoUtils.prepareCanvas` to update the pixel buffer for the display scale, and `DemoUtils.observeResize` on the layout container to redraw when its dimensions change. Demo styles consume the size variables set by the script and control how panels stack at narrower widths.
+
+## Demo Script Layout
+
+Each demo uses a private function scope, two-space indentation, and the same section order: configuration, DOM references, theme, state/data, calculations, controls, layout, drawing, rendering, animation, interaction, and initialization. Omit sections a demo does not need. Keep `LAYOUT` in configuration, group related functions together, and put event wiring and the final `init()` call at the bottom. Preserve comments that explain the educational math.
+
 ## Dependencies
 
 External scripts are loaded from CDNs:

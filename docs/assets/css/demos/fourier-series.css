@@ -2,10 +2,8 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-#plot {
-  width: 100%;
-  height: clamp(250px, 34vw, 340px);
-  min-height: 0;
+#plotHost {
+  height: var(--plot-height);
   margin-top: 8px;
 }
 

@@ -135,11 +135,52 @@ const DemoUtils = {
     };
   },
 
-  measureElementWidth(element, minimum = 320) {
+  measureElementWidth(element, minimum = 1) {
     return Math.max(
       minimum,
       Math.floor(element.clientWidth)
     );
+  },
+
+  // Embedded demos use the outer viewport, not their auto-sized iframe height.
+  viewportHeight() {
+    try {
+      return window.parent.innerHeight;
+    } catch {
+      return window.innerHeight;
+    }
+  },
+
+  plotHeight(minimum, maximum, fraction = 0.55) {
+    return Math.round(DemoUtils.clamp(
+      DemoUtils.viewportHeight() * fraction,
+      minimum,
+      maximum
+    ));
+  },
+
+  connectPlayback(onReset, onChange) {
+    const playback = {
+      paused: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || false
+    };
+    const button = document.getElementById("pauseBtn");
+    function update() {
+      button.textContent = playback.paused ? "Fortsett" : "Pause";
+      button.setAttribute("aria-pressed", String(playback.paused));
+      onChange();
+    }
+    button.addEventListener("click", () => {
+      playback.paused = !playback.paused;
+      update();
+    });
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      onReset();
+      onChange();
+    });
+    // Initialization precedes the first animation frame.
+    button.textContent = playback.paused ? "Fortsett" : "Pause";
+    button.setAttribute("aria-pressed", String(playback.paused));
+    return playback;
   },
 
   runAfterLayoutSettles(callback, delay = 120) {

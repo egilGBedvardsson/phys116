@@ -8,7 +8,7 @@ const START_FREQUENCY = 1;
 const END_FREQUENCY = 20;
 
 const CONTINUOUS_SAMPLE_COUNT = 4000;
-const PLOT_HEIGHT = 730;
+
 
 const SINC_RADIUS = 20;
 
@@ -533,6 +533,16 @@ function buildLayout(
   width,
   nyquistFrequency
 ) {
+  const height = DemoUtils.plotHeight(600, 620, 0.6);
+  const margin = {
+    l: width < 480 ? 48 : 62,
+    r: 12,
+    t: 26,
+    b: 40
+  };
+  // Keep a 12 px gap as the two plot panels grow with the viewport.
+  const halfGap = 6 / (height - margin.t - margin.b);
+
   return {
     font: {
       family:
@@ -549,14 +559,8 @@ function buildLayout(
     autosize: false,
 
     width,
-    height: PLOT_HEIGHT,
-
-    margin: {
-      l: 75,
-      r: 35,
-      t: 58,
-      b: 35
-    },
+    height,
+    margin,
 
     yaxis: {
       title: {
@@ -571,7 +575,7 @@ function buildLayout(
         size: 16
       },
 
-      domain: [0.56, 0.98],
+      domain: [0.5 + halfGap, 1],
       range: [-1.2, 1.2],
 
       showline: true,
@@ -597,7 +601,7 @@ function buildLayout(
         size: 16
       },
 
-      domain: [0.03, 0.44],
+      domain: [0, 0.5 - halfGap],
 
       range: [
         0,
@@ -694,6 +698,11 @@ function buildLayout(
 function renderPlot({
   remeasureWidth = false
 } = {}) {
+  if (typeof Plotly === "undefined") {
+    plot.textContent = "Kunne ikke laste diagramverktøyet. Last siden på nytt når du har nettilgang.";
+    return;
+  }
+
   const sampleRate =
     Number(
       controls.sampleRate.value
@@ -701,6 +710,10 @@ function renderPlot({
 
   readouts.sampleRate.textContent =
     `${sampleRate} Hz`;
+
+  const relation = sampleRate > 40 ? "over" : sampleRate === 40 ? "ved" : "under";
+  document.getElementById("samplingStatus").textContent =
+    `Chirp: 1–20 Hz · Nyquist-frekvens: ${sampleRate / 2} Hz · ${relation} nominell samplingsgrense på 40 Hz`;
 
   const sampleTimes =
     generateSampleTimes(

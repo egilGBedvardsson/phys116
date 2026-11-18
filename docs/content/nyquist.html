@@ -1,11 +1,12 @@
 <p>
-  Denne demoen viser sampling av en chirp, altså et signal der frekvensen endrer seg over tid.
+  Sampling av en chirp med momentan frekvens fra 1 til 20 Hz over 5 sekunder.
+  For et båndbegrenset signal gir samplingsbetingelsen
 </p>
-
 <p class="doc-eq">\[
-f_s \geq 2f_{\max}
+f_s > 2f_{\max}
 \]</p>
-
 <p>
-  Endre samplingsfrekvensen \(f_s\) for å se hvordan målepunktene, sinc-rekonstruksjonen og spektrogrammet påvirkes. Når \(f_s\) blir lav, blir det lettere å se aliasing og begrensningene i rekonstruksjonen.
+  Likhet krever særlige forutsetninger om frekvensinnhold og fase. Her er 40 Hz den nominelle grensen.
+  Sinc-summen er avkortet og bruker et endelig utsnitt; randfeil kan derfor oppstå også over 40 Hz.
+  Spektrogrammet viser frekvensinnholdet i de samplede dataene.
 </p>

@@ -30,7 +30,7 @@
       <img
         class="demo-footer-logo"
         src="../assets/images/UiB_PositivEmblem.png"
-        alt="University logo"
+        alt="UiB-logo"
       >
       <span>Universitetet i Bergen</span>
       <span>PHYS 116</span>
@@ -50,7 +50,7 @@
           type="range"
           min="-3.14"
           max="3.14"
-          step="0.05"
+          step="0.01"
           value="0"
         >
       </div>
@@ -74,7 +74,9 @@
 
     </section>
 
-    <div id="plot"></div>
+    <div class="demo-actions"><button id="resetPhase" type="button">Nullstill fase</button></div>
+    <div id="plot" role="img" aria-label="Reell og imaginær del av Fourier-rekken"></div>
+    <p id="seriesSummary" class="sr-only" aria-live="polite"></p>
 
   </div>
 </body>

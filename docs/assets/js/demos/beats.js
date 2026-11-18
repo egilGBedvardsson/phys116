@@ -15,8 +15,8 @@ const MAX_POINTS = 960;
 
 const GRAPH = {
   paddingX: 20,
-  paddingTop: 60,
-  paddingBottom: 50,
+  paddingTop: 12,
+  paddingBottom: 30,
   signalScale: 0.35
 };
 
@@ -88,6 +88,7 @@ const state = {
   previousTimestamp: null,
   sampleAccumulator: 0,
 
+  playback: null,
   buffer: []
 };
 
@@ -304,80 +305,14 @@ function drawCurve(graph, property, color, lineWidth) {
   ctx.stroke();
 }
 
-function drawLabels(
-  graph,
-  values
-) {
-  const beatFrequency =
-    values.delta;
-
-  const beatPeriod =
-    beatFrequency > 0
-      ? 1 / beatFrequency
-      : Infinity;
-
-  ctx.font =
-    "13px sans-serif";
-
-  ctx.fillStyle =
-    plotColors.signal;
-
-  ctx.fillText(
-    "Kombinert signal",
-    graph.x + 10,
-    graph.y + 18
-  );
-
-  ctx.fillStyle =
-    plotColors.secondary;
-
-  ctx.fillText(
-    "Envelope",
-    graph.x + 170,
-    graph.y + 18
-  );
-
-
-  ctx.fillStyle =
-    plotColors.text;
-
-  ctx.fillText(
-    `f₁ = ${values.freq1.toFixed(1)} Hz`,
-    graph.x + 10,
-    graph.y +
-      graph.height +
-      24
-  );
-
-  ctx.fillText(
-    `f₂ = ${values.freq2.toFixed(1)} Hz`,
-    graph.x + 140,
-    graph.y +
-      graph.height +
-      24
-  );
-
-
-  const beatText =
-    beatFrequency > 0
-      ? (
-          `fslag = Δf = ` +
-          `${beatFrequency.toFixed(1)} Hz` +
-          `   Tslag = ` +
-          `${beatPeriod.toFixed(2)} s`
-        )
-      : (
-          "Δf = 0 Hz — " +
-          "ingen beats"
-        );
-
-  ctx.fillText(
-    beatText,
-    graph.x + 280,
-    graph.y +
-      graph.height +
-      24
-  );
+function drawLabels(graph) {
+  ctx.font = "12px sans-serif";
+  ctx.fillStyle = plotColors.text;
+  ctx.textAlign = "left";
+  ctx.fillText("Nå", graph.x, state.height - 8);
+  ctx.textAlign = "right";
+  ctx.fillText("4 s siden", graph.x + graph.width, state.height - 8);
+  ctx.textAlign = "left";
 }
 
 function drawMarker(x, y, color) {
@@ -506,34 +441,16 @@ function animate(timestamp) {
     realDeltaTime *
     values.speed;
 
-  state.time +=
-    simulationDelta;
-
-  state.sampleAccumulator +=
-    simulationDelta;
-
-  while (
-    state.sampleAccumulator >=
-    HISTORY_SAMPLE_STEP
-  ) {
-    state.sampleAccumulator -=
-      HISTORY_SAMPLE_STEP;
-
-    const sampleTime =
-      state.time -
-      state.sampleAccumulator;
-
-    addSignalPoint(
-      calculateSignal(
-        values.freq1,
-        values.freq2,
-        values.amplitude,
-        sampleTime
-      )
-    );
+  if (!state.playback.paused) {
+    state.time += simulationDelta;
+    state.sampleAccumulator += simulationDelta;
+    while (state.sampleAccumulator >= HISTORY_SAMPLE_STEP) {
+      state.sampleAccumulator -= HISTORY_SAMPLE_STEP;
+      const sampleTime = state.time - state.sampleAccumulator;
+      addSignalPoint(calculateSignal(values.freq1, values.freq2, values.amplitude, sampleTime));
+    }
+    draw(values);
   }
-
-  draw(values);
 
   requestAnimationFrame(
     animate
@@ -544,25 +461,36 @@ function animate(timestamp) {
 // Initialization
 // -----------------------------------------------------------------------------
 
-function init() {
+function refreshView() {
   updateReadouts();
+  const values = getControlValues();
+  const period = values.delta > 0 ? `${(1 / values.delta).toFixed(2)} s` : "ingen beats";
+  document.getElementById("signalReadout").textContent =
+    `f₁ = ${values.freq1.toFixed(1)} Hz · f₂ = ${values.freq2.toFixed(1)} Hz · ` +
+    `Beat-frekvens: ${values.delta.toFixed(1)} Hz · Periode: ${period} · Rødt: amplitudeomslag`;
+  draw(values);
+}
+
+function init() {
+  state.playback = DemoUtils.connectPlayback(() => {
+    state.time = 0;
+    state.previousTimestamp = null;
+    state.sampleAccumulator = 0;
+    state.buffer.length = 0;
+  }, refreshView);
   resizeCanvas();
-
-  for (const control of Object.values(controls)) {
-    control.input.addEventListener(
-      "input",
-      updateReadouts
-    );
-  }
-
-  DemoUtils.observeResize(
-    plot,
-    resizeCanvas
-  );
-
-  requestAnimationFrame(
-    animate
-  );
+  controls.delta.input.addEventListener("input", () => {
+    state.buffer.length = 0;
+    state.sampleAccumulator = 0;
+    refreshView();
+  });
+  controls.speed.input.addEventListener("input", refreshView);
+  DemoUtils.observeResize(plot, () => {
+    resizeCanvas();
+    refreshView();
+  });
+  refreshView();
+  requestAnimationFrame(animate);
 }
 
 init();

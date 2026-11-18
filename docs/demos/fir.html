@@ -214,7 +214,7 @@
   <div class="control">
     <div class="row">
       <label for="kernelLength">
-        Kernel-lengde
+        Filterlengde
       </label>
 
       <span
@@ -265,7 +265,7 @@
     <section id="output">
 
       <canvas
-        id="outputCanvas"
+        id="outputCanvas" role="img" aria-label="Inngang og forsinkelseskompensert utgang som funksjon av tid." aria-describedby="summary"
         width="1200"
         height="360"
       ></canvas>
@@ -277,13 +277,13 @@
       <div id="subplots">
 
         <canvas
-          id="impulseCanvas"
+          id="impulseCanvas" role="img" aria-label="Filterets impulsrespons som funksjon av sampleindeks." aria-describedby="summary"
           width="590"
           height="220"
         ></canvas>
 
         <canvas
-          id="responseCanvas"
+          id="responseCanvas" role="img" aria-label="Filterets magnituderespons i dB som funksjon av frekvens." aria-describedby="summary"
           width="590"
           height="220"
         ></canvas>
@@ -296,7 +296,7 @@
       <img
         class="demo-footer-logo"
         src="../assets/images/UiB_PositivEmblem.png"
-        alt="University logo"
+        alt="UiB-logo"
       >
 
       <span>Universitetet i Bergen</span>

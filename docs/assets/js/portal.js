@@ -11,7 +11,7 @@
  * Change this when demo assets change substantially.
  * The value is appended to iframe and document URLs to reduce stale caching.
  */
-const ASSET_VERSION = "20260808-refactor";
+const ASSET_VERSION = "20261118-nyquist-height";
 
 const DEMOS = {
   home: {
@@ -125,6 +125,7 @@ const state = {
   frameHeightTimers: [],
   lastFrameHeight: 0,
 
+  activeKey: null,
   documentLoadToken: 0,
   documentCache: new Map()
 };
@@ -293,6 +294,22 @@ async function renderDocument(key) {
 
   elements.documentContent.innerHTML =
     markup;
+
+  if (key !== "home" && elements.documentContent.firstElementChild) {
+    const introduction = elements.documentContent.firstElementChild;
+    const details = document.createElement("details");
+    details.className = "doc-details";
+    const summary = document.createElement("summary");
+    summary.textContent = "Formler og forutsetninger";
+    details.appendChild(summary);
+    while (introduction.nextElementSibling) {
+      details.appendChild(introduction.nextElementSibling);
+    }
+    elements.documentContent.appendChild(details);
+    details.addEventListener("toggle", () => {
+      elements.frame.contentWindow?.dispatchEvent(new Event("resize"));
+    });
+  }
 
   await typesetDocument();
 }
@@ -553,6 +570,12 @@ function updateFrameHeightOnWindowResize() {
 // -----------------------------------------------------------------------------
 
 function setActiveNavigation(key) {
+  document.getElementById("demoSelect").value = key;
+  if (key === "home") {
+    elements.homeButton.setAttribute("aria-current", "page");
+  } else {
+    elements.homeButton.removeAttribute("aria-current");
+  }
   for (
     const button of
       elements.navigationButtons
@@ -647,7 +670,7 @@ function hideDemo() {
     false;
 
   elements.emptyState.textContent =
-    "Velg et dokument fra sidepanelet for å starte.";
+    "Velg en demo fra menyen for å starte.";
 
   elements.externalLink.hidden =
     true;
@@ -671,9 +694,12 @@ function loadDemo(
   const demo =
     DEMOS[key];
 
-  if (!demo) {
+  if (!demo) return;
+  if (state.activeKey === key) {
+    if (updateUrl) updateHash(key);
     return;
   }
+  state.activeKey = key;
 
   elements.viewerTitle.textContent =
     demo.title;
@@ -714,6 +740,7 @@ function loadFromHash() {
 // -----------------------------------------------------------------------------
 
 function updateToTopButton() {
+  elements.toTopButton.tabIndex = window.scrollY > 280 ? 0 : -1;
   elements.toTopButton.classList.toggle(
     "visible",
     window.scrollY > 280
@@ -726,6 +753,9 @@ function updateToTopButton() {
 // -----------------------------------------------------------------------------
 
 function connectEvents() {
+  document.getElementById("demoSelect").addEventListener("change", event => {
+    loadDemo(event.target.value);
+  });
   for (
     const button of
       elements.navigationButtons

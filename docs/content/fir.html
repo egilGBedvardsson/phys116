@@ -1,13 +1,11 @@
 <p>
-  Denne demoen viser hvordan et FIR-filter endrer et signal i tidsdomenet og frekvensdomenet.
+  Et FIR-filter endrer signalet ved konvolusjon. Samplingsfrekvensen her er 256 Hz.
 </p>
-
 <p class="doc-eq">\[
-y[n] = x[n] * h[n]
-     = \sum_k x[k]h[n-k]
+y[n] = \sum_k x[k]h[n-k]
 \]</p>
-
 <p>
-  Velg signaltype, filtertype og filterparametere for å sammenligne inngangssignal, filtrert signal, impulsrespons og magnituderespons.
+  Utgangen vises kompensert for forsinkelsen \((L-1)/2\) sampler, der \(L\) er effektiv filterlengde.
+  Utenfor utsnittet settes inngangen til null. Grensefrekvensen i vindusmetoden er omtrent −6 dB-punktet;
+  korte filtre gir brede overganger. Alle filtrene skaleres til maksimal gain 1.
 </p>
-

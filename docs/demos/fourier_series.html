@@ -35,7 +35,7 @@
 
       <div class="control">
         <div class="row">
-          <label for="termsRange">Antall harmonier</label>
+          <label for="termsRange">Antall ledd N</label>
           <span id="termsVal" class="value"></span>
         </div>
 
@@ -45,7 +45,7 @@
           type="range"
           min="1"
           max="25"
-          step="2"
+          step="1"
           value="9"
         >
       </div>
@@ -69,13 +69,19 @@
 
     </section>
 
-    <canvas id="plot"></canvas>
+    <div class="demo-actions">
+      <button id="pauseBtn" type="button" aria-pressed="false">Pause</button>
+      <button id="resetBtn" type="button">Start på nytt</button>
+    </div>
+    <canvas id="plot" role="img" aria-label="Fourier-rekke med roterende harmoniske bidrag" aria-describedby="plotDescription">Roterende harmoniske bidrag og summen av dem som en periodisk kurve.</canvas>
+    <p id="plotDescription" class="sr-only">Roterende harmoniske bidrag og summen av dem som en periodisk kurve.</p>
+    <p id="signalReadout" class="demo-readout" aria-live="polite"></p>
 
     <div id="top-banner" class="demo-footer">
       <img
         class="demo-footer-logo"
         src="../assets/images/UiB_PositivEmblem.png"
-        alt="University logo"
+        alt="UiB-logo"
       >
 
       <span>Universitetet i Bergen</span>

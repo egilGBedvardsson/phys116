@@ -51,9 +51,9 @@ html.demo-embedded body.demo-page #page {
   box-sizing: border-box;
 
   padding:
-    18px
+    10px
     var(--demo-control-inset)
-    16px;
+    10px;
 
   border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
@@ -134,7 +134,68 @@ button:hover {
   accent-color: var(--slider-thumb-color);
 
   cursor: pointer;
-  outline: none;
+}
+
+:where(button, a, input, select, summary):focus-visible {
+  outline: 3px solid var(--plot-highlight);
+  outline-offset: 3px;
+}
+
+.demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.demo-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.numeric-editor {
+  margin: 6px 0 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  font-size: 14px;
+}
+
+.numeric-editor summary {
+  cursor: pointer;
+}
+
+.numeric-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.numeric-fields label {
+  display: grid;
+  gap: 4px;
+}
+
+.numeric-fields input {
+  width: 100px;
+  min-height: 32px;
+  font: inherit;
 }
 
 .demo-page .slider::-webkit-slider-runnable-track {
@@ -223,3 +284,6 @@ canvas {
     padding-left: var(--demo-padding-x-mobile);
   }
 }
+
+canvas, svg { min-width: 0; max-width: 100%; }
+#controls .row { flex-wrap: wrap; gap: 2px 8px; }

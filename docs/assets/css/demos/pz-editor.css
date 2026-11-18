@@ -5,201 +5,72 @@
 #controls {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
-
-  padding:
-    8px
-    var(--demo-control-inset)
-    12px;
-  margin-bottom: 10px;
-
+  padding: 8px var(--demo-control-inset) 12px;
+  margin-bottom: 8px;
   border-top: 0;
-  border-bottom: 1px solid var(--border-subtle);
 }
 
-.control {
-  display: grid;
-  gap: 4px;
-}
-
-.control > label {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-select,
-button {
-  height: var(--control-height);
-  line-height: 1.2;
-}
-
-.check-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  height: var(--control-height);
-  padding-left: 0;
-
-  font-size: 14px;
-  font-weight: 400;
-}
-
-.check-wrap input {
-  margin: 0;
-}
-
-.control-conjugate {
-  padding-left: 14px;
-}
-
-.control-conjugate .check-wrap {
-  padding-left: 6px;
-}
-
-#status {
-  margin: 0 0 10px;
-
-  font-size: 14px;
-  line-height: 1.35;
-}
-
-
-/* --------------------------------------------------------------------------
-   Main layout
-   -------------------------------------------------------------------------- */
+.control { display: grid; gap: 4px; }
+.control > label { font-size: 13px; font-weight: 600; }
+select, button { min-height: var(--control-height); line-height: 1.2; }
+.check-wrap { display: inline-flex; align-items: center; gap: 8px; min-height: var(--control-height); }
+.check-wrap input { margin: 0; }
+#status { margin: 0 0 8px; padding: 0 10px; font-size: 13px; line-height: 1.4; }
+#pointSelect { max-width: 260px; }
+#responseNote { font-size: 13px; }
 
 #layout {
   display: grid;
-
-  grid-template-columns:
-    minmax(300px, 0.95fr)
-    minmax(420px, 1.05fr);
-
+  grid-template-columns: minmax(240px, 0.85fr) minmax(300px, 1.15fr);
   gap: 12px;
-
-  /* Both columns get the same total height. */
   align-items: stretch;
 }
 
-
-/* --------------------------------------------------------------------------
-   Pole-zero panel
-   -------------------------------------------------------------------------- */
-
 .panel {
-  box-sizing: border-box;
-
+  min-width: 0;
   padding: 8px;
-
   border: 1px solid var(--border-subtle);
   background: var(--plot-bg);
 }
-
-.panel h3 {
-  margin: 0 0 8px;
-
-  font-size: 17px;
-  font-weight: 600;
-}
-
+.panel h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; }
 #pzCanvas {
-  display: block;
-
   width: 100%;
-  aspect-ratio: 1 / 1;
-
+  max-width: 340px;
+  margin: 0 auto;
+  aspect-ratio: 1;
   border: 0;
-
   cursor: crosshair;
   touch-action: none;
-
-  background: var(--plot-bg);
 }
-
-
-/* --------------------------------------------------------------------------
-   Magnitude / phase column
-   -------------------------------------------------------------------------- */
 
 #plots {
   display: grid;
-
-  /* Split the available height equally. */
-  grid-template-rows:
-    repeat(2, minmax(0, 1fr));
-
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 10px;
-
+  min-width: 0;
   min-height: 0;
 }
-
 .plot-wrap {
   display: flex;
   flex-direction: column;
-
+  min-width: 0;
   min-height: 0;
   padding: 6px;
-
   border: 1px solid var(--border-subtle);
   background: var(--plot-bg);
 }
-
-.plot-wrap h4 {
-  flex: 0 0 auto;
-
-  margin: 0 0 6px;
-
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.plot-canvas {
-  display: block;
-
-  flex: 1 1 0;
-
-  width: 100%;
-  height: 0;
-  min-height: 0;
-
-  border: 0;
-
-  background: var(--plot-bg);
-}
-
-
-/* --------------------------------------------------------------------------
-   Responsive
-   -------------------------------------------------------------------------- */
+.plot-wrap h4 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+.plot-canvas { flex: 1 1 0; width: 100%; height: 0; min-height: 0; border: 0; }
 
 @media (max-width: 860px) {
-  #controls {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
-  }
-
-  #layout {
-    grid-template-columns: 1fr;
-  }
-
-  /*
-    Once the panels stack vertically, they no longer need
-    to share the pole-zero panel's height.
-  */
-  #plots {
-    grid-template-rows: none;
-  }
-
-  .plot-canvas {
-    flex: none;
-
-    height: 220px;
-  }
+  #controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-
-@media (max-width: 700px) {
-  #controls {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-  }
+@media (max-width: 680px) {
+  #controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #layout { grid-template-columns: 1fr; }
+  #plots { grid-template-rows: none; }
+  .plot-canvas { flex: none; height: 170px; }
+}
+@media (max-width: 440px) {
+  #controls { grid-template-columns: 1fr; }
 }

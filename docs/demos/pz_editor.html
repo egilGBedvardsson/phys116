@@ -77,25 +77,36 @@
 
     </section>
 
-    <p id="status"></p>
+    <details class="numeric-editor">
+      <summary>Rediger punkter med tastatur</summary>
+      <div class="numeric-fields">
+        <label>Valgt punkt<select id="pointSelect"><option value="">Ingen</option></select></label>
+        <label>Type ved innsetting<select id="pointType"><option value="zero">Null</option><option value="pole">Pol</option></select></label>
+        <label>Reell del<input id="pointReal" type="number" min="-1.4" max="1.4" step="any" required value="0.5"></label>
+        <label>Imaginær del<input id="pointImaginary" type="number" min="-1.4" max="1.4" step="any" required value="0"></label>
+        <button id="addNumericPoint" type="button">Legg til</button>
+        <button id="moveNumericPoint" type="button">Flytt valgt</button>
+      </div>
+    </details>
+    <p id="status" aria-live="polite"></p>
 
     <section id="layout">
 
       <article class="panel">
         <h3>Poler og nuller i z-planet</h3>
-        <canvas id="pzCanvas"></canvas>
+        <canvas id="pzCanvas" role="img" aria-describedby="status">Poler og nuller i z-planet. Bruk punkteditoren for tastaturbetjening.</canvas>
       </article>
 
       <article id="plots">
 
         <section class="plot-wrap">
           <h4>
-            Magnituderespons |H(e<sup>jω</sup>)| i dB
+            Magnituderespons (K = 1), |H(e<sup>jω</sup>)| i dB
           </h4>
 
           <canvas
-            id="magCanvas"
-            class="plot-canvas"
+            id="magCanvas" aria-label="Absolutt magnituderespons i dB"
+            class="plot-canvas" role="img" aria-describedby="status"
           ></canvas>
         </section>
 
@@ -105,8 +116,8 @@
           </h4>
 
           <canvas
-            id="phaseCanvas"
-            class="plot-canvas"
+            id="phaseCanvas" aria-label="Utfoldet faserespons i radianer"
+            class="plot-canvas" role="img" aria-describedby="status"
           ></canvas>
         </section>
 
@@ -114,11 +125,12 @@
 
     </section>
 
+    <p id="responseNote" class="demo-readout"></p>
     <div id="top-banner" class="demo-footer">
       <img
         class="demo-footer-logo"
         src="../assets/images/UiB_PositivEmblem.png"
-        alt="University logo"
+        alt="UiB-logo"
       >
 
       <span>Universitetet i Bergen</span>

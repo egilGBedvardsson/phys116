@@ -563,10 +563,10 @@ function drawSamplePoints() {
       }
     );
 
-    appendText(
+    if (GRAPH.width >= 800) appendText(
       `(${formatX(point.x)}, ${point.y.toFixed(2)})`,
       {
-        x: x + 8,
+        x: Math.min(x + 8, GRAPH.width - 110),
         y: y - 6,
 
         fill:
@@ -586,85 +586,17 @@ function formatX(value) {
     : value.toFixed(1);
 }
 
-function drawLabels(method) {
-  appendText(
-    "Interpolert kurve = sum",
-    {
-      x: GRAPH.x + 10,
-      y: GRAPH.y + 20,
-
-      fill:
-        plotColors.primary,
-
-      "font-size": 13,
-
-      "font-family":
-        "sans-serif"
-    }
-  );
-
-
-  appendText(
-    "Enkeltbidrag",
-    {
-      x: GRAPH.x + 190,
-      y: GRAPH.y + 20,
-
-      fill:
-        plotColors.primary,
-
-      "fill-opacity": 0.55,
-
-      "font-size": 13,
-
-      "font-family":
-        "sans-serif"
-    }
-  );
-
-
-  appendText(
-    "Sample-punkter",
-    {
-      x: GRAPH.x + 310,
-      y: GRAPH.y + 20,
-
-      fill:
-        plotColors.tertiary,
-
-      "font-size": 13,
-
-      "font-family":
-        "sans-serif"
-    }
-  );
-
-
-  const selectedMethod =
-    methodSelect.options[
-      methodSelect.selectedIndex
-    ].text;
-
-  appendText(
-    `Metode: ${selectedMethod}`,
-    {
-      x:
-        GRAPH.x + 10,
-
-      y:
-        GRAPH.y +
-        GRAPH.plotHeight +
-        46,
-
-      fill:
-        plotColors.muted,
-
-      "font-size": 13,
-
-      "font-family":
-        "sans-serif"
-    }
-  );
+function drawLabels() {
+  for (let index = 0; index <= 5; index++) {
+    appendText(String(index), { x: mapX(index), y: GRAPH.y + GRAPH.plotHeight + 20,
+      fill: plotColors.text, "font-size": 12, "text-anchor": "middle" });
+  }
+  for (const value of [0, 0.5, 1]) {
+    appendText(value.toFixed(1), { x: GRAPH.x - 8, y: mapY(value) + 4,
+      fill: plotColors.text, "font-size": 12, "text-anchor": "end" });
+  }
+  appendText("t", { x: GRAPH.width - 12, y: GRAPH.height - 7,
+    fill: plotColors.text, "font-size": 13 });
 }
 
 function drawContributionCurves(
@@ -805,46 +737,9 @@ function drawProbe(method) {
   );
 
 
-  appendText(
-    `t* = ${x.toFixed(2)}`,
-    {
-      x:
-        screenX + 7,
-
-      y:
-        GRAPH.y + 18,
-
-      fill:
-        plotColors.secondary,
-
-      "font-size": 12,
-
-      "font-family":
-        "sans-serif"
-    }
-  );
-
-
-  appendText(
-    `Ved t* = ${x.toFixed(2)}:  x̂(t*) = Σ x[n] · wₙ(t*) = ${y.toFixed(3)}`,
-    {
-      x:
-        GRAPH.x + 10,
-
-      y:
-        GRAPH.y +
-        GRAPH.plotHeight +
-        24,
-
-      fill:
-        plotColors.text,
-
-      "font-size": 13,
-
-      "font-family":
-        "sans-serif"
-    }
-  );
+  const selectedMethod = methodSelect.options[methodSelect.selectedIndex].text;
+  document.getElementById("probeReadout").textContent =
+    `${selectedMethod} · t* = ${x.toFixed(2)} · x̂(t*) = Σ x[n] wₙ(t*) = ${y.toFixed(3)}. Blått: sum og enkeltbidrag. Turkis: samplepunkter.`;
 }
 
 function clampProbeX(value) {
@@ -947,6 +842,14 @@ function handlePlotPointer(
 // -----------------------------------------------------------------------------
 
 function draw() {
+  GRAPH.width = Math.max(1, Math.round(plot.clientWidth));
+  GRAPH.height = DemoUtils.plotHeight(230, 320, 0.42);
+  GRAPH.x = 42;
+  GRAPH.y = 16;
+  GRAPH.plotWidth = Math.max(1, GRAPH.width - 62);
+  GRAPH.plotHeight = GRAPH.height - 58;
+  plot.setAttribute("viewBox", `0 0 ${GRAPH.width} ${GRAPH.height}`);
+  plot.style.height = `${GRAPH.height}px`;
   const method =
     methodSelect.value;
 
@@ -987,6 +890,22 @@ function draw() {
 // -----------------------------------------------------------------------------
 
 function init() {
+  plot.addEventListener("keydown", event => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const step = event.shiftKey ? 0.1 : 0.01;
+    if (event.key === "Home") probeX = 0;
+    else if (event.key === "End") probeX = GRAPH.xMax;
+    else probeX = clampProbeX(probeX + (event.key === "ArrowLeft" ? -step : step));
+    draw();
+  });
+  let lastWidth = 0;
+  DemoUtils.observeResize(plot, () => {
+    if (plot.clientWidth === lastWidth) return;
+    lastWidth = plot.clientWidth;
+    draw();
+  });
+  window.addEventListener("resize", draw, { passive: true });
   methodSelect.addEventListener(
     "change",
     draw

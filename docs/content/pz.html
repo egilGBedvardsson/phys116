@@ -1,11 +1,12 @@
 <p>
-  Denne demoen viser sammenhengen mellom poler og nuller i z-planet og frekvensresponsen til et diskret system.
+  Poler og nuller bestemmer systemets overføringsfunksjon. Her brukes gainfaktor \(K=1\).
 </p>
-
 <p class="doc-eq">\[
 H(z)=\frac{\prod_k (z-z_k)}{\prod_m (z-p_m)}
 \]</p>
-
 <p>
-  Legg til, flytt eller slett poler og nuller for å se hvordan magnitude, fase og stabilitet endres. Frekvensresponsen vurderes på enhetsirkelen, \(z=e^{j\omega}\).
+  Responsen beregnes på \(z=e^{j\omega}\), med absolutt magnitude og utfoldet fase.
+  BIBO-stabilitet vurderes etter kansellering, for en kausal realisering: alle gjenværende poler må ligge strengt innenfor enhetsirkelen.
+  Ved flere nuller enn poler kreves ekstra forsinkelse for kausalitet; denne endrer fase, men ikke magnitude eller stabilitet.
+  For ustabile systemer er kurven en formell evaluering av \(H(z)\).
 </p>

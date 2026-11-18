@@ -5,10 +5,10 @@
 
 #plot {
   width: 100%;
-  height: clamp(380px, 45vw, 460px);
+  height: clamp(240px, 32vw, 320px);
 }
 
-@media (max-width: 860px) {
+@media (max-width: 520px) {
   #controls {
     grid-template-columns: 1fr;
   }

@@ -8,7 +8,7 @@ const ANGULAR_FREQUENCY =
   2 * Math.PI * FUNDAMENTAL_FREQUENCY;
 
 const TIME_SAMPLE_COUNT = 4000;
-const PLOT_HEIGHT = 590;
+
 
 
 // -----------------------------------------------------------------------------
@@ -211,7 +211,7 @@ function buildTraces(data) {
       y: data.idealReal,
 
       name:
-        "Ideell (symmetrisk konjugering)",
+        "Re (symmetrisk)",
 
       line: {
         color: plotColors.text,
@@ -224,7 +224,7 @@ function buildTraces(data) {
       y: data.brokenReal,
 
       name:
-        "Brutt par (Reell del)",
+        "Re (brutt)",
 
       line: {
         color: plotColors.secondary
@@ -236,13 +236,13 @@ function buildTraces(data) {
       y: data.brokenImaginary,
 
       name:
-        "Imaginær lekkasje",
+        "Im (brutt)",
 
       line: {
         color: plotColors.primary
       },
 
-      xaxis: "x",
+      xaxis: "x2",
       yaxis: "y2"
     }
   ];
@@ -269,13 +269,13 @@ function buildLayout(width) {
 
     autosize: false,
     width,
-    height: PLOT_HEIGHT,
+    height: DemoUtils.plotHeight(320, 420, 0.5),
 
     margin: {
-      l: 75,
-      r: 35,
-      t: 58,
-      b: 20
+      l: width < 480 ? 48 : 62,
+      r: 12,
+      t: 50,
+      b: 42
     },
 
     legend: {
@@ -346,6 +346,9 @@ function buildLayout(width) {
     },
 
     xaxis: {
+      anchor: "y",
+      domain: [0, 1],
+      matches: "x2",
       showticklabels: false,
 
       showline: true,
@@ -362,10 +365,12 @@ function buildLayout(width) {
     },
 
     xaxis2: {
+      anchor: "y2",
+      domain: [0, 1],
       title: {
         text: "Tid (s)",
         font: {
-          size: 22
+          size: 16
         }
       },
 
@@ -394,6 +399,10 @@ function buildLayout(width) {
 function renderPlot({
   remeasureWidth = false
 } = {}) {
+  if (typeof Plotly === "undefined") {
+    plot.textContent = "Kunne ikke laste diagramverktøyet. Last siden på nytt når du har nettilgang.";
+    return;
+  }
   const values =
     getControlValues();
 
@@ -404,6 +413,10 @@ function renderPlot({
       values.phi,
       values.harmonics
     );
+
+  const peakImaginary = Math.max(...data.brokenImaginary.map(Math.abs));
+  document.getElementById("seriesSummary").textContent =
+    `Fase ${values.phi.toFixed(2)} rad. ${values.harmonics} odde harmoniske ledd. Største imaginære amplitude: ${peakImaginary.toFixed(3)}.`;
 
   const width =
     remeasureWidth ||
@@ -434,6 +447,10 @@ function renderPlot({
 // -----------------------------------------------------------------------------
 
 function init() {
+  document.getElementById("resetPhase").addEventListener("click", () => {
+    controls.phi.value = "0";
+    renderPlot();
+  });
   controls.phi.addEventListener(
     "input",
     () => {

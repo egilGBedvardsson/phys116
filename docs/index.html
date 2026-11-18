@@ -83,7 +83,7 @@
 
   <script
     defer
-    src="./assets/js/portal.js"
+    src="./assets/js/portal.js?v=20261118-nyquist-height"
   ></script>
 </head>
 
@@ -96,7 +96,7 @@
       <header class="window-bar">
         <div class="window-title-wrap">
           <h1 class="window-title">
-            Signal og Systemanalyse
+            Signal- og systemanalyse
           </h1>
         </div>
 
@@ -204,6 +204,20 @@
               Poler og nuller
             </button>
           </nav>
+
+          <label class="compact-navigation" for="demoSelect">
+            Velg demo
+            <select id="demoSelect">
+              <option value="home">Forside</option>
+              <option value="nyquist">Sampling og Nyquist</option>
+              <option value="beats">Beats</option>
+              <option value="firkantsignal">Firkantsignal og konjugatsymmetri</option>
+              <option value="fourier">Fourier-rekker</option>
+              <option value="interpolation">Interpolasjon</option>
+              <option value="fir">FIR-filtre</option>
+              <option value="pz">Poler og nuller</option>
+            </select>
+          </label>
 
         </aside>
 

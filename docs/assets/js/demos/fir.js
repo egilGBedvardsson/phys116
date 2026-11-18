@@ -821,51 +821,6 @@ function clearCanvas(
 }
 
 
-function drawGrid(
-  context,
-  size
-) {
-  const width =
-    size.width;
-
-  const height =
-    size.height;
-
-  context.strokeStyle =
-    plotColors.grid;
-
-  context.lineWidth = 1;
-
-  for (
-    let i = 1;
-    i < 4;
-    i++
-  ) {
-    const y =
-      (height * i) / 4;
-
-    context.beginPath();
-    context.moveTo(0, y);
-    context.lineTo(width, y);
-    context.stroke();
-  }
-
-  for (
-    let i = 1;
-    i < 5;
-    i++
-  ) {
-    const x =
-      (width * i) / 5;
-
-    context.beginPath();
-    context.moveTo(x, 0);
-    context.lineTo(x, height);
-    context.stroke();
-  }
-}
-
-
 // -----------------------------------------------------------------------------
 // Plot interpolation
 // -----------------------------------------------------------------------------
@@ -958,331 +913,112 @@ function sincInterpolate(
 // Main signal plot
 // -----------------------------------------------------------------------------
 
-function drawMainPlot(
-  input,
-  output
-) {
-  const size =
-    clearCanvas(
-      outputCtx,
-      outputCanvas
-    );
-
-  drawGrid(
-    outputCtx,
-    size
-  );
-
-  const width =
-    size.width;
-
-  const height =
-    size.height;
-
-  const denseCount =
-    Math.max(
-      Math.ceil(width),
-      input.length
-    );
-
-  const smoothInput =
-    sincInterpolate(
-      input,
-      denseCount
-    );
-
-  const smoothOutput =
-    sincInterpolate(
-      output,
-      denseCount
-    );
-
-  const maxAbs =
-    Math.max(
-      1e-6,
-      ...smoothInput.map(Math.abs),
-      ...smoothOutput.map(Math.abs)
-    );
-
-  function mapX(index, length) {
-    return (
-      index /
-      Math.max(
-        1,
-        length - 1
-      )
-    ) *
-    width;
+function drawAxes(context, size, { xMin, xMax, yMin, yMax, title, xLabel, formatX, formatY }) {
+  const left = 48, right = 14, top = 28, bottom = 34;
+  const width = Math.max(1, size.width - left - right);
+  const height = Math.max(1, size.height - top - bottom);
+  const mapX = value => left + (value - xMin) / (xMax - xMin) * width;
+  const mapY = value => top + (yMax - value) / (yMax - yMin) * height;
+  context.font = "12px sans-serif";
+  const ticks = size.width < 340 ? 2 : 4;
+  for (let index = 0; index <= ticks; index++) {
+    const xValue = xMin + index / ticks * (xMax - xMin);
+    const x = mapX(xValue);
+    context.strokeStyle = plotColors.grid;
+    context.beginPath(); context.moveTo(x, top); context.lineTo(x, top + height); context.stroke();
+    context.fillStyle = plotColors.text;
+    context.textAlign = "center";
+    context.fillText(formatX(xValue), x, top + height + 16);
   }
-
-  function mapY(value) {
-    return (
-      height / 2 -
-      (value / maxAbs) *
-      (height * 0.42)
-    );
+  for (let index = 0; index <= 4; index++) {
+    const value = yMin + index / 4 * (yMax - yMin);
+    const y = mapY(value);
+    context.strokeStyle = plotColors.grid;
+    context.beginPath(); context.moveTo(left, y); context.lineTo(left + width, y); context.stroke();
+    context.fillStyle = plotColors.text;
+    context.textAlign = "right";
+    context.fillText(formatY(value), left - 6, y + 4);
   }
-
-
-  // Input signal
-  outputCtx.strokeStyle =
-    plotColors.axis;
-
-  outputCtx.lineWidth = 1.5;
-  outputCtx.beginPath();
-
-  smoothInput.forEach(
-    (value, index) => {
-      const x =
-        mapX(
-          index,
-          smoothInput.length
-        );
-
-      const y =
-        mapY(value);
-
-      if (index === 0) {
-        outputCtx.moveTo(x, y);
-      } else {
-        outputCtx.lineTo(x, y);
-      }
-    }
-  );
-
-  outputCtx.stroke();
-
-
-  // Filtered signal
-  outputCtx.strokeStyle =
-    plotColors.text;
-
-  outputCtx.lineWidth = 2;
-  outputCtx.beginPath();
-
-  smoothOutput.forEach(
-    (value, index) => {
-      const x =
-        mapX(
-          index,
-          smoothOutput.length
-        );
-
-      const y =
-        mapY(value);
-
-      if (index === 0) {
-        outputCtx.moveTo(x, y);
-      } else {
-        outputCtx.lineTo(x, y);
-      }
-    }
-  );
-
-  outputCtx.stroke();
+  context.strokeStyle = plotColors.axis;
+  context.strokeRect(left, top, width, height);
+  context.fillStyle = plotColors.text;
+  context.textAlign = "left";
+  context.font = "13px sans-serif";
+  context.fillText(title, 10, 17);
+  context.font = "12px sans-serif";
+  context.textAlign = "right";
+  context.fillText(xLabel, size.width - 6, size.height - 3);
+  context.textAlign = "left";
+  return { mapX, mapY };
 }
 
+function strokeSeries(context, values, axes, xValue, color) {
+  context.strokeStyle = color;
+  context.lineWidth = 1.6;
+  context.beginPath();
+  values.forEach((value, index) => {
+    const x = axes.mapX(xValue(index));
+    const y = axes.mapY(value);
+    if (index === 0) context.moveTo(x, y);
+    else context.lineTo(x, y);
+  });
+  context.stroke();
+}
 
-// -----------------------------------------------------------------------------
-// Impulse response plot
-// -----------------------------------------------------------------------------
+function drawMainPlot(input, output) {
+  const size = clearCanvas(outputCtx, outputCanvas);
+  const count = Math.max(Math.ceil(size.width), input.length);
+  const smoothInput = sincInterpolate(input, count);
+  const smoothOutput = sincInterpolate(output, count);
+  const peak = Math.max(0.1, ...smoothInput.map(Math.abs), ...smoothOutput.map(Math.abs));
+  const limit = Math.ceil(peak * 10) / 10;
+  const axes = drawAxes(outputCtx, size, {
+    xMin: 0, xMax: 1, yMin: -limit, yMax: limit,
+    title: "Inngang og utgang · amplitude", xLabel: "Tid (s)",
+    formatX: value => value.toFixed(2), formatY: value => value.toFixed(1)
+  });
+  const timeAt = index => index / (count - 1) * (input.length - 1) / SAMPLE_RATE;
+  strokeSeries(outputCtx, smoothInput, axes, timeAt, plotColors.axis);
+  strokeSeries(outputCtx, smoothOutput, axes, timeAt, plotColors.text);
+}
 
 function drawImpulse(kernel) {
-  const size =
-    clearCanvas(
-      impulseCtx,
-      impulseCanvas
-    );
-
-  drawGrid(
-    impulseCtx,
-    size
-  );
-
-  const width =
-    size.width;
-
-  const height =
-    size.height;
-
-  const maxAbs =
-    Math.max(
-      1e-6,
-      ...kernel.map(Math.abs)
-    );
-
-  impulseCtx.strokeStyle =
-    plotColors.text;
-
-  impulseCtx.lineWidth = 1.4;
-  impulseCtx.beginPath();
-
-  kernel.forEach(
-    (value, index) => {
-      const x =
-        (
-          index /
-          Math.max(
-            1,
-            kernel.length - 1
-          )
-        ) *
-        width;
-
-      const y =
-        height / 2 -
-        (value / maxAbs) *
-        (height * 0.42);
-
-      if (index === 0) {
-        impulseCtx.moveTo(x, y);
-      } else {
-        impulseCtx.lineTo(x, y);
-      }
-    }
-  );
-
-  impulseCtx.stroke();
-
-  impulseCtx.fillStyle =
-    plotColors.text;
-
-  impulseCtx.font =
-    "15px Times New Roman";
-
-  impulseCtx.fillText(
-    "Impulsrespons h[n]",
-    12,
-    22
-  );
+  const size = clearCanvas(impulseCtx, impulseCanvas);
+  const low = Math.min(0, ...kernel), high = Math.max(0.01, ...kernel);
+  const padding = (high - low) * 0.1;
+  const axes = drawAxes(impulseCtx, size, {
+    xMin: 0, xMax: Math.max(1, kernel.length - 1), yMin: low - padding, yMax: high + padding,
+    title: "Impulsrespons h[n]", xLabel: "Sampleindeks n",
+    formatX: value => Math.round(value).toString(), formatY: value => value.toFixed(2)
+  });
+  impulseCtx.strokeStyle = plotColors.text;
+  impulseCtx.lineWidth = 1;
+  kernel.forEach((value, index) => {
+    const x = axes.mapX(index);
+    impulseCtx.beginPath(); impulseCtx.moveTo(x, axes.mapY(0)); impulseCtx.lineTo(x, axes.mapY(value)); impulseCtx.stroke();
+  });
 }
 
-
-// -----------------------------------------------------------------------------
-// Frequency-response plot
-// -----------------------------------------------------------------------------
-
 function drawResponse(kernel) {
-  const size =
-    clearCanvas(
-      responseCtx,
-      responseCanvas
-    );
-
-  drawGrid(
-    responseCtx,
-    size
-  );
-
-  const {
-    magnitude,
-    frequency
-  } =
-    magnitudeResponse(
-      kernel,
-      260
-    );
-
-  const decibels =
-    magnitude.map(
-      value =>
-        20 *
-        Math.log10(
-          value + 1e-8
-        )
-    );
-
-  const minDb = -60;
-  const maxDb = 6;
-
-  const width =
-    size.width;
-
-  const height =
-    size.height;
-
-  responseCtx.strokeStyle =
-    plotColors.text;
-
-  responseCtx.lineWidth = 1.7;
-  responseCtx.beginPath();
-
-  decibels.forEach(
-    (value, index) => {
-      const x =
-        (
-          index /
-          (decibels.length - 1)
-        ) *
-        width;
-
-      const db =
-        clamp(
-          value,
-          minDb,
-          maxDb
-        );
-
-      const y =
-        height -
-        (
-          (db - minDb) /
-          (maxDb - minDb)
-        ) *
-        (height - 20) -
-        10;
-
-      if (index === 0) {
-        responseCtx.moveTo(
-          x,
-          y
-        );
-      } else {
-        responseCtx.lineTo(
-          x,
-          y
-        );
-      }
-    }
-  );
-
-  responseCtx.stroke();
-
-
-  responseCtx.fillStyle =
-    plotColors.text;
-
-  responseCtx.font =
-    "15px Times New Roman";
-
-  responseCtx.fillText(
-    "|H(f)| i dB",
-    12,
-    22
-  );
-
-
-  responseCtx.fillStyle =
-    plotColors.muted;
-
-  responseCtx.font =
-    "13px Times New Roman";
-
-  responseCtx.fillText(
-    "0 Hz",
-    8,
-    height - 8
-  );
-
-  responseCtx.fillText(
-    `${Math.round(
-      frequency[
-        frequency.length - 1
-      ]
-    )} Hz`,
-    width - 48,
-    height - 8
-  );
+  const size = clearCanvas(responseCtx, responseCanvas);
+  const { magnitude, frequency } = magnitudeResponse(kernel, 260);
+  const axes = drawAxes(responseCtx, size, {
+    xMin: 0, xMax: NYQUIST_FREQUENCY, yMin: -60, yMax: 6,
+    title: "Magnituderespons (dB)", xLabel: "Frekvens (Hz)",
+    formatX: value => Math.round(value).toString(), formatY: value => Math.round(value).toString()
+  });
+  strokeSeries(responseCtx, magnitude.map(value => clamp(20 * Math.log10(Math.max(value, 1e-12)), -60, 6)),
+    axes, index => frequency[index], plotColors.text);
+  const settings = getFilterSettings();
+  const markers = settings.type === "bandpass" ? [settings.bandLowHz, settings.bandHighHz] :
+    ["lowpass", "highpass", "notch"].includes(settings.type) ? [settings.cutoffHz] : [];
+  responseCtx.strokeStyle = plotColors.muted;
+  responseCtx.setLineDash([4, 4]);
+  for (const frequency of markers) {
+    const x = axes.mapX(frequency);
+    responseCtx.beginPath(); responseCtx.moveTo(x, axes.mapY(-60)); responseCtx.lineTo(x, axes.mapY(6)); responseCtx.stroke();
+  }
+  responseCtx.setLineDash([]);
 }
 
 
@@ -1515,11 +1251,12 @@ function updateSummary(filterState) {
   }
 
 
-  summary.textContent =
-    details.join(" | ");
+  const delay = (filterState.total.length - 1) / 2;
+  details.push(`fs: ${SAMPLE_RATE} Hz`, `Kompensert forsinkelse: ${delay} sampler (${(1000 * delay / SAMPLE_RATE).toFixed(1)} ms)`);
+  summary.textContent = details.join(" | ");
 
   plotLegend.textContent =
-    "Inngang x[n] (grå) + utgang y[n] (svart)";
+    "Inngang x[n] (grå) og forsinkelseskompensert utgang (svart)";
 }
 
 
@@ -1644,6 +1381,14 @@ function init() {
     controls.bandHigh
   );
 
+  let resizeFrame = 0;
+  DemoUtils.observeResize(document.getElementById("output"), () => {
+    if (resizeFrame) return;
+    resizeFrame = requestAnimationFrame(() => {
+      resizeFrame = 0;
+      refresh();
+    });
+  });
   refresh();
 }
 

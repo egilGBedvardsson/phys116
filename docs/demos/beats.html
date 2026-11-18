@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beats</title>
 
   <link rel="stylesheet" href="../assets/css/design.css">
   <link rel="stylesheet" href="../assets/css/demo.css">
@@ -65,13 +66,19 @@
 
     </section>
 
-    <canvas id="plot"></canvas>
+    <div class="demo-actions">
+      <button id="pauseBtn" type="button" aria-pressed="false">Pause</button>
+      <button id="resetBtn" type="button">Start på nytt</button>
+    </div>
+    <canvas id="plot" role="img" aria-label="To sinussignaler med amplitudeomslag" aria-describedby="plotDescription">Summen av to sinussignaler med rødt amplitudeomslag.</canvas>
+    <p id="plotDescription" class="sr-only">Summen av to sinussignaler med rødt amplitudeomslag.</p>
+    <p id="signalReadout" class="demo-readout" aria-live="polite"></p>
 
     <div id="top-banner" class="demo-footer">
       <img
         class="demo-footer-logo"
         src="../assets/images/UiB_PositivEmblem.png"
-        alt="University logo"
+        alt="UiB-logo"
       >
       <span>Universitetet i Bergen</span>
       <span>PHYS 116</span>

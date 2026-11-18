@@ -9,7 +9,6 @@
   const RESPONSE_SAMPLES = 520;
 
   const MAGNITUDE_MIN_DB = -60;
-  const MAGNITUDE_MAX_DB = 3;
 
   const PICK_RADIUS = 11;
 
@@ -135,40 +134,6 @@
     );
   }
 
-  function complexMultiply(a, b) {
-    return complex(
-      a.re * b.re -
-        a.im * b.im,
-
-      a.re * b.im +
-        a.im * b.re
-    );
-  }
-
-  function complexDivide(a, b) {
-    const denominator =
-      b.re * b.re +
-      b.im * b.im;
-
-    if (denominator < EPSILON) {
-      return complex(1e6, 0);
-    }
-
-    return complex(
-      (
-        a.re * b.re +
-        a.im * b.im
-      ) /
-        denominator,
-
-      (
-        a.im * b.re -
-        a.re * b.im
-      ) /
-        denominator
-    );
-  }
-
   function complexMagnitude(value) {
     return Math.hypot(
       value.re,
@@ -214,7 +179,7 @@
     const sign =
       point.im >= 0
         ? "+"
-        : "−";
+        : "-";
 
     return (
       `${real} ${sign} j${imaginary}`
@@ -382,7 +347,7 @@
 
     const shouldAddPair =
       state.addConjugate &&
-      Math.abs(imaginary) > 0.01;
+      Math.abs(imaginary) > EPSILON;
 
     if (shouldAddPair) {
       const pairId =
@@ -401,7 +366,7 @@
     } else {
       if (
         Math.abs(point.im) <
-        0.01
+        EPSILON
       ) {
         point.im = 0;
       }
@@ -442,7 +407,7 @@
 
     point.im =
       clamp(
-        Math.abs(imaginary) < 0.01
+        Math.abs(imaginary) < EPSILON
           ? 0
           : imaginary,
 
@@ -470,28 +435,7 @@
       return;
     }
 
-    if (Math.abs(point.im) < 0.01) {
-      // A conjugate pair collapses to one
-      // point when it reaches the real axis.
-
-      point.pair = null;
-
-      const mateIndex =
-        points.findIndex(
-          other =>
-            other.id === mate.id
-        );
-
-      if (mateIndex >= 0) {
-        points.splice(
-          mateIndex,
-          1
-        );
-      }
-
-      return;
-    }
-
+    // Keep multiplicity when the pair meets on the real axis.
     mate.re = point.re;
     mate.im = -point.im;
   }
@@ -860,6 +804,21 @@
     ctx.font =
       '13px "Times New Roman", Times, serif';
 
+    for (const points of [state.zeros, state.poles]) {
+      const groups = new Map();
+      for (const point of points) {
+        const key = `${point.re.toFixed(9)}:${point.im.toFixed(9)}`;
+        const group = groups.get(key) || { point, count: 0 };
+        group.count++;
+        groups.set(key, group);
+      }
+      for (const { point, count } of groups.values()) {
+        if (count < 2) continue;
+        const screen = complexToScreen(point, width, height);
+        ctx.fillText(`×${count}`, Math.min(screen.x + 12, width - 25), Math.max(14, screen.y - 10));
+      }
+    }
+
     ctx.fillText(
       "Klikk for å legge til. Dra for flytting.",
       10,
@@ -872,134 +831,67 @@
   // Frequency response
   // ---------------------------------------------------------------------------
 
+  function reducedRoots() {
+    const poles = [...state.poles];
+    const zeros = [];
+    let cancelled = 0;
+    for (const zero of state.zeros) {
+      const match = poles.findIndex(pole =>
+        Math.hypot(zero.re - pole.re, zero.im - pole.im) <= EPSILON
+      );
+      if (match >= 0) {
+        poles.splice(match, 1);
+        cancelled++;
+      } else {
+        zeros.push(zero);
+      }
+    }
+    return { zeros, poles, cancelled };
+  }
+
   function evaluateResponse() {
-    const omega =
-        new Array(RESPONSE_SAMPLES + 1);
+    const roots = reducedRoots();
+    const omega = [];
+    const magnitudeDb = [];
+    const phase = [];
+    let singular = false;
 
-    const magnitude =
-        new Array(RESPONSE_SAMPLES + 1);
+    for (let index = 0; index <= RESPONSE_SAMPLES; index++) {
+      const frequency = Math.PI * index / RESPONSE_SAMPLES;
+      const z = complex(Math.cos(frequency), Math.sin(frequency));
+      let logMagnitude = 0;
+      let angle = 0;
+      let atZero = false;
+      let atPole = false;
 
-    const magnitudeDb =
-        new Array(RESPONSE_SAMPLES + 1);
-
-    const phase =
-        new Array(RESPONSE_SAMPLES + 1);
-
-    for (
-        let index = 0;
-        index <= RESPONSE_SAMPLES;
-        index++
-    ) {
-        const frequency =
-        (Math.PI * index) /
-        RESPONSE_SAMPLES;
-
-        const z =
-        complex(
-            Math.cos(frequency),
-            Math.sin(frequency)
-        );
-
-        let numerator =
-        complex(1, 0);
-
-        for (const zero of state.zeros) {
-        numerator =
-            complexMultiply(
-            numerator,
-            complexSubtract(z, zero)
-            );
+      // Sum log magnitudes instead of dividing potentially tiny products.
+      for (const [points, sign] of [[roots.zeros, 1], [roots.poles, -1]]) {
+        for (const point of points) {
+          const difference = complexSubtract(z, point);
+          const distance = complexMagnitude(difference);
+          if (distance <= EPSILON) {
+            if (sign > 0) atZero = true;
+            else atPole = true;
+          } else {
+            logMagnitude += sign * Math.log10(distance);
+            angle += sign * complexPhase(difference);
+          }
         }
-
-        let denominator =
-        complex(1, 0);
-
-        for (const pole of state.poles) {
-        denominator =
-            complexMultiply(
-            denominator,
-            complexSubtract(z, pole)
-            );
-        }
-
-        const response =
-        complexDivide(
-            numerator,
-            denominator
-        );
-
-        omega[index] =
-        frequency;
-
-        magnitude[index] =
-        complexMagnitude(response);
-
-        phase[index] =
-        complexPhase(response);
+      }
+      omega.push(frequency);
+      magnitudeDb.push(atPole ? Infinity : atZero ? -Infinity : 20 * logMagnitude);
+      phase.push(atPole || atZero ? NaN : Math.atan2(Math.sin(angle), Math.cos(angle)));
+      singular ||= atPole;
     }
-
-    const peakMagnitude =
-        Math.max(
-        ...magnitude,
-        EPSILON
-        );
-
-    for (
-        let index = 0;
-        index < magnitude.length;
-        index++
-    ) {
-        magnitudeDb[index] =
-        20 *
-        Math.log10(
-            Math.max(
-            magnitude[index] /
-                peakMagnitude,
-            EPSILON
-            )
-        );
-    }
-
     unwrapPhase(phase);
-
-    return {
-        omega,
-        magnitudeDb,
-        phase
-    };
-    }
+    return { omega, magnitudeDb, phase, singular };
+  }
 
   function unwrapPhase(phase) {
-    for (
-      let index = 1;
-      index < phase.length;
-      index++
-    ) {
-      let difference =
-        phase[index] -
-        phase[index - 1];
-
-      while (
-        difference >
-        Math.PI
-      ) {
-        phase[index] -=
-          2 * Math.PI;
-
-        difference -=
-          2 * Math.PI;
-      }
-
-      while (
-        difference <
-        -Math.PI
-      ) {
-        phase[index] +=
-          2 * Math.PI;
-
-        difference +=
-          2 * Math.PI;
-      }
+    for (let index = 1; index < phase.length; index++) {
+      if (!Number.isFinite(phase[index]) || !Number.isFinite(phase[index - 1])) continue;
+      const difference = phase[index] - phase[index - 1];
+      phase[index] -= 2 * Math.PI * Math.round(difference / (2 * Math.PI));
     }
   }
 
@@ -1184,11 +1076,16 @@
     ctx.lineWidth = 1.8;
     ctx.beginPath();
 
+    let drawing = false;
     for (
       let index = 0;
       index < dataX.length;
       index++
     ) {
+      if (!Number.isFinite(dataY[index])) {
+        drawing = false;
+        continue;
+      }
       const x =
         mapX(
           dataX[index]
@@ -1199,11 +1096,9 @@
           dataY[index]
         );
 
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
+      if (!drawing) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+      drawing = true;
     }
 
     ctx.stroke();
@@ -1277,145 +1172,81 @@
   }
 
   function drawResponses() {
-    const response =
-      evaluateResponse();
-
-    const phaseMin =
-      Math.min(
-        ...response.phase
-      );
-
-    const phaseMax =
-      Math.max(
-        ...response.phase
-      );
-
-    const phasePadding =
-      0.2;
-
-    drawCurvePlot(
-      magnitudeCanvas,
-      response.omega,
-
-      response.magnitudeDb.map(
-        value =>
-          clamp(
-            value,
-            MAGNITUDE_MIN_DB,
-            MAGNITUDE_MAX_DB
-          )
-      ),
-
-      {
-        yMin:
-          MAGNITUDE_MIN_DB,
-
-        yMax:
-          MAGNITUDE_MAX_DB,
-
-        color:
-          plotColors.text
-      }
+    const response = evaluateResponse();
+    const finitePhase = response.phase.filter(Number.isFinite);
+    const finiteMagnitude = response.magnitudeDb.filter(Number.isFinite);
+    const maxDb = Math.max(6, Math.ceil(Math.max(0, ...finiteMagnitude) / 10) * 10);
+    drawCurvePlot(magnitudeCanvas, response.omega,
+      response.magnitudeDb.map(value => clamp(value, MAGNITUDE_MIN_DB, maxDb)),
+      { yMin: MAGNITUDE_MIN_DB, yMax: maxDb, color: plotColors.text }
     );
-
-    drawCurvePlot(
-      phaseCanvas,
-      response.omega,
-      response.phase,
-
-      {
-        yMin:
-          phaseMin -
-          phasePadding,
-
-        yMax:
-          phaseMax +
-          phasePadding,
-
-        color:
-          plotColors.pole
-      }
+    drawCurvePlot(phaseCanvas, response.omega, response.phase, {
+      yMin: Math.min(0, ...finitePhase) - 0.2,
+      yMax: Math.max(0, ...finitePhase) + 0.2,
+      color: plotColors.pole
+    });
+    const unitPoles = reducedRoots().poles.some(pole =>
+      Math.abs(complexMagnitude(pole) - 1) <= EPSILON
     );
+    document.getElementById("responseNote").textContent =
+      `Absolutt gain med K = 1. Visning fra ${MAGNITUDE_MIN_DB} til ${maxDb} dB. ` +
+      (unitPoles ? "Pol på enhetsirkelen: responsen er singulær ved polens vinkel; fase er udefinert der." :
+        "Fase er udefinert ved nullpunkter i responsen.");
   }
 
 
   // ---------------------------------------------------------------------------
   // Status
   // ---------------------------------------------------------------------------
-function updateStatus() {
-  const largestPoleRadius =
-    state.poles.reduce(
-      (largest, pole) =>
-        Math.max(
-          largest,
-          complexMagnitude(pole)
-        ),
-      0
-    );
-
-  let stabilityText;
-
-  if (largestPoleRadius < 0.999) {
-    stabilityText =
-      "Stabil (alle poler innenfor enhetsirkelen)";
-  } else if (largestPoleRadius <= 1.001) {
-    stabilityText =
-      "Marginal (pol på enhetsirkelen)";
-  } else {
-    stabilityText =
-      "Ustabil (pol utenfor enhetsirkelen)";
-  }
-
-
-  let selectedText =
-    "Valgt: ingen";
-
-  if (state.selected) {
-    const selectedPoint =
-      findPoint(
-        state.selected.type,
-        state.selected.id
-      );
-
-    if (selectedPoint) {
-      const typeLabel =
-        state.selected.type === "zero"
-          ? "null"
-          : "pol";
-
-      const real =
-        selectedPoint.re.toFixed(3);
-
-      const imaginary =
-        Math.abs(
-          selectedPoint.im
-        ).toFixed(3);
-
-      const sign =
-        selectedPoint.im >= 0
-          ? "+"
-          : "−";
-
-      const radius =
-        complexMagnitude(
-          selectedPoint
-        ).toFixed(3);
-
-      selectedText =
-        `Valgt: ${typeLabel} ` +
-        `z = ${real} ${sign} j${imaginary}, ` +
-        `|z| = ${radius}`;
+  function updateStatus() {
+    const roots = reducedRoots();
+    const largestPoleRadius = Math.max(0, ...roots.poles.map(complexMagnitude));
+    const stable = largestPoleRadius < 1 - EPSILON;
+    const boundary = roots.poles.some(pole => Math.abs(complexMagnitude(pole) - 1) <= EPSILON);
+    const stability = stable ? "BIBO-stabil" : boundary && largestPoleRadius <= 1 + EPSILON
+      ? "Ikke BIBO-stabil (pol på enhetsirkelen)"
+      : "Ikke BIBO-stabil (pol utenfor enhetsirkelen)";
+    let selection = "Valgt: ingen";
+    if (state.selected) {
+      const point = findPoint(state.selected.type, state.selected.id);
+      if (point) selection = `Valgt: ${state.selected.type === "zero" ? "null" : "pol"} ${formatComplexPoint(point)}, |z| = ${complexMagnitude(point).toFixed(3)}`;
     }
+    status.textContent =
+      `Nuller: ${state.zeros.length} · Poler: ${state.poles.length} · ` +
+      `Kansellerte pol–null-par: ${roots.cancelled} · ${stability} (kausal realisering) · ${selection}`;
+    syncPointEditor();
   }
 
-  status.innerHTML =
-    `Nuller: <b>${state.zeros.length}</b> &nbsp;|&nbsp; ` +
-    `Poler: <b>${state.poles.length}</b> &nbsp;|&nbsp; ` +
-    `Maks |pol|: <b>${largestPoleRadius.toFixed(3)}</b> &nbsp;|&nbsp; ` +
-    `Stabilitet: <b>${stabilityText}</b> &nbsp;|&nbsp; ` +
-    selectedText;
-}
+  function syncPointEditor() {
+    const select = document.getElementById("pointSelect");
+    const value = state.selected ? `${state.selected.type}:${state.selected.id}` : "";
+    const options = [new Option("Ingen", "")];
+    for (const [type, points] of [["zero", state.zeros], ["pole", state.poles]]) {
+      for (const point of points) {
+        options.push(new Option(`${type === "zero" ? "Null" : "Pol"} ${point.id}: ${formatComplexPoint(point)}`, `${type}:${point.id}`));
+      }
+    }
+    select.replaceChildren(...options);
+    select.value = value;
+    if (state.selected) {
+      const point = findPoint(state.selected.type, state.selected.id);
+      if (point) {
+        document.getElementById("pointType").value = state.selected.type;
+        document.getElementById("pointReal").value = point.re;
+        document.getElementById("pointImaginary").value = point.im;
+      }
+    }
+    document.getElementById("moveNumericPoint").disabled = !state.selected;
+    controls.removeSelected.disabled = !state.selected;
+  }
 
+  function readNumericPoint() {
+    const real = document.getElementById("pointReal");
+    const imaginary = document.getElementById("pointImaginary");
+    if (!real.reportValidity() || !imaginary.reportValidity()) return null;
+    if (real.value === "" || imaginary.value === "") return null;
+    return { re: Number(real.value), im: Number(imaginary.value) };
+  }
 
   // ---------------------------------------------------------------------------
   // Presets / reset
@@ -1636,6 +1467,23 @@ function updateStatus() {
   // ---------------------------------------------------------------------------
 
   function init() {
+    document.getElementById("pointSelect").addEventListener("change", event => {
+      const [type, id] = event.target.value.split(":");
+      state.selected = id ? { type, id: Number(id) } : null;
+      redrawAll();
+    });
+    document.getElementById("addNumericPoint").addEventListener("click", () => {
+      const point = readNumericPoint();
+      if (!point) return;
+      addPoint(document.getElementById("pointType").value, point.re, point.im);
+      redrawAll();
+    });
+    document.getElementById("moveNumericPoint").addEventListener("click", () => {
+      const point = readNumericPoint();
+      if (!point) return;
+      moveSelectedPoint(point.re, point.im);
+      redrawAll();
+    });
     controls.mode.addEventListener(
       "change",
       () => {

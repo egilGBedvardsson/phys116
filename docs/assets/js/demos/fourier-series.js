@@ -2,7 +2,11 @@
 // Configuration
 // -----------------------------------------------------------------------------
 
-const MAX_WAVEFORM_POINTS = 760;
+const HISTORY_SAMPLE_STEP = 1 / 240;
+const MAX_WAVEFORM_POINTS = 960;
+const MAX_RADIUS_SUM = Array.from({ length: 25 }, (_, index) =>
+  4 / (Math.PI * (2 * index + 1))
+).reduce((sum, value) => sum + value, 0);
 const BASE_ANGULAR_SPEED = 1;
 
 const LAYOUT = {
@@ -68,6 +72,8 @@ const state = {
   time: 0,
   previousTimestamp: null,
 
+  sampleAccumulator: 0,
+  playback: null,
   waveform: []
 };
 
@@ -164,13 +170,15 @@ function getTriangleCoefficient(index, baseRadius) {
   };
 }
 
-function getCoefficients(shape, count) {
-  const baseRadius =
-    Math.min(
-      state.width,
-      state.height
-    ) *
-    LAYOUT.baseRadiusScale;
+function getBaseRadius() {
+  // Reserve room for every epicycle, including the 25-term extreme.
+  return Math.min(
+    Math.min(state.width, state.height) * LAYOUT.baseRadiusScale,
+    state.width * 0.21 / MAX_RADIUS_SUM
+  );
+}
+
+function getCoefficients(shape, count, baseRadius = getBaseRadius()) {
 
   const coefficients = [];
 
@@ -307,9 +315,17 @@ function drawGraphFrame(graph) {
   ctx.stroke();
 
   ctx.setLineDash([]);
+  ctx.fillStyle = plotColors.axis;
+  ctx.font = "12px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("Nå", graph.x, state.height - 5);
+  ctx.textAlign = "right";
+  ctx.fillText("4 s siden", graph.x + graph.width, state.height - 5);
+  ctx.textAlign = "left";
 }
 
 function drawWaveform(graph) {
+  const baseRadius = getBaseRadius();
   if (state.waveform.length === 0) {
     return;
   }
@@ -332,7 +348,7 @@ function drawWaveform(graph) {
 
       const y =
         graph.centerY +
-        value;
+        value * baseRadius;
 
       if (index === 0) {
         ctx.moveTo(x, y);
@@ -347,7 +363,7 @@ function drawWaveform(graph) {
   drawPoint(
     graph.x,
     graph.centerY +
-      state.waveform[0],
+      state.waveform[0] * baseRadius,
     5,
     plotColors.secondary
   );
@@ -371,15 +387,14 @@ function drawPoint(x, y, radius, color) {
 // Fourier construction
 // -----------------------------------------------------------------------------
 
-function calculateEndpoint(coefficients, origin, speed) {
+function calculateEndpoint(coefficients, origin) {
   let x = origin.x;
   let y = origin.y;
 
   for (const coefficient of coefficients) {
     const angle =
       coefficient.frequency *
-        state.time *
-        speed +
+        state.time +
       coefficient.phase;
 
     const nextX =
@@ -467,16 +482,8 @@ function draw(values) {
   const endpoint =
     calculateEndpoint(
       coefficients,
-      origin,
-      values.speed
+      origin
     );
-
-  const waveformValue =
-    endpoint.y - origin.y;
-
-  addWaveformPoint(
-    waveformValue
-  );
 
   drawGraphFrame(graph);
 
@@ -521,12 +528,20 @@ function animate(timestamp) {
   const values =
     getControlValues();
 
-  state.time +=
-    deltaTime *
-    BASE_ANGULAR_SPEED;
-
-  clearCanvas();
-  draw(values);
+  if (!state.playback.paused) {
+    const simulationDelta = deltaTime * BASE_ANGULAR_SPEED * values.speed;
+    state.time += simulationDelta;
+    state.sampleAccumulator += simulationDelta;
+    const coefficients = getCoefficients(values.shape, values.harmonics, 1);
+    while (state.sampleAccumulator >= HISTORY_SAMPLE_STEP) {
+      state.sampleAccumulator -= HISTORY_SAMPLE_STEP;
+      const sampleTime = state.time - state.sampleAccumulator;
+      addWaveformPoint(coefficients.reduce((sum, coefficient) => sum +
+        coefficient.amplitude * Math.sin(coefficient.frequency * sampleTime + coefficient.phase), 0));
+    }
+    clearCanvas();
+    draw(values);
+  }
 
   requestAnimationFrame(animate);
 }
@@ -535,36 +550,37 @@ function animate(timestamp) {
 // Initialization
 // -----------------------------------------------------------------------------
 
-function init() {
+function refreshView() {
   updateReadouts();
+  const values = getControlValues();
+  const highest = values.shape === "sawtooth" ? values.harmonics : 2 * values.harmonics - 1;
+  document.getElementById("signalReadout").textContent =
+    `${values.harmonics} ledd · Høyeste harmoniske: ${highest} · Tidsspor: 0–4 s bakover fra nåtiden`;
+  clearCanvas();
+  draw(values);
+}
+
+function init() {
+  state.playback = DemoUtils.connectPlayback(() => {
+    state.time = 0;
+    state.previousTimestamp = null;
+    state.sampleAccumulator = 0;
+    resetWaveform();
+  }, refreshView);
   resizeCanvas();
-
-    controls.shape.addEventListener(
-    "change",
-    () => {
-        resetWaveform();
-        updateReadouts();
-    }
-    );
-
-    controls.terms.addEventListener(
-    "input",
-    () => {
-        resetWaveform();
-        updateReadouts();
-    }
-    );
-
-    controls.speed.addEventListener(
-    "input",
-    updateReadouts
-    );
-
-  DemoUtils.observeResize(
-    plot,
-    resizeCanvas
-  );
-
+  for (const control of [controls.shape, controls.terms]) {
+    control.addEventListener("input", () => {
+      resetWaveform();
+      state.sampleAccumulator = 0;
+      refreshView();
+    });
+  }
+  controls.speed.addEventListener("input", refreshView);
+  DemoUtils.observeResize(plot, () => {
+    resizeCanvas();
+    refreshView();
+  });
+  refreshView();
   requestAnimationFrame(animate);
 }
 

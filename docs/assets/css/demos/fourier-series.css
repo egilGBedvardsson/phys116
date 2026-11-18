@@ -1,15 +1,15 @@
 #controls {
-  grid-template-columns: repeat(3, minmax(170px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 #plot {
   width: 100%;
-  height: clamp(380px, 48vw, 470px);
+  height: clamp(250px, 34vw, 340px);
   min-height: 0;
   margin-top: 8px;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 560px) {
   #controls {
     grid-template-columns: 1fr;
   }

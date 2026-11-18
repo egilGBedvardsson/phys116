@@ -8,12 +8,12 @@
 
   <link rel="stylesheet" href="../assets/css/design.css">
   <link rel="stylesheet" href="../assets/css/demo.css">
-  <link rel="stylesheet" href="../assets/css/demos/nyquist-chirp.css">
+  <link rel="stylesheet" href="../assets/css/demos/nyquist-chirp.css?v=20261118-compact-demos">
 
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 
   <script src="../assets/js/demo-utils.js" defer></script>
-  <script src="../assets/js/demos/nyquist-chirp.js" defer></script>
+  <script src="../assets/js/demos/nyquist-chirp.js?v=20261118-nyquist-height" defer></script>
 </head>
 
 <body class="demo-page">
@@ -23,7 +23,7 @@
       <div class="control">
         <div class="row">
           <label for="fsSlider">
-            Samplingfrekvens (fs)
+            Samplingsfrekvens (fs)
           </label>
 
           <span id="fsVal" class="value"></span>
@@ -41,13 +41,14 @@
       </div>
     </section>
 
-    <div id="plot"></div>
+    <div id="plot" role="img" aria-label="Samplet chirp, rekonstruksjon og spektrogram"></div>
+    <p id="samplingStatus" class="demo-readout" aria-live="polite"></p>
 
     <div id="top-banner" class="demo-footer">
       <img
         class="demo-footer-logo"
         src="../assets/images/UiB_PositivEmblem.png"
-        alt="University logo"
+        alt="UiB-logo"
       >
 
       <span>Universitetet i Bergen</span>

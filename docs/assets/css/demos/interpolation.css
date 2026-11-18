@@ -1,64 +1,21 @@
-:root {
-  --panel: var(--color-surface-bg);
-}
-
 #controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 12px;
-}
-
-.control {
-  display: grid;
-  gap: 6px;
-}
-
-.row {
-  gap: 10px;
-
-  color: var(--color-text-primary);
-}
-
-select {
-  min-width: 220px;
-
-  padding: 8px 10px;
-
-  border-radius: 8px;
-
-  background: var(--panel);
+  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+  align-items: center;
 }
 
 #plot {
   display: block;
-  overflow: visible;
-
-  cursor: crosshair;
-  touch-action: none;
-
   width: 100%;
-  min-height: 420px;
-  margin-top: 8px;
-
+  min-width: 0;
+  margin-top: 6px;
+  cursor: crosshair;
+  touch-action: pan-y;
   border: 1px solid var(--border-subtle);
   background: var(--plot-bg);
 }
 
-.hint {
-  margin: 0;
-
-  font-size: 13px;
-  color: var(--color-text-muted);
-}
-
-@media (max-width: 860px) {
-  #controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  select {
-    min-width: 0;
-  }
+#plot:focus-visible { outline: 3px solid var(--plot-highlight); outline-offset: -3px; }
+.hint { margin: 0; font-size: 13px; color: var(--color-text-muted); }
+@media (max-width: 640px) {
+  #controls { grid-template-columns: 1fr; }
 }

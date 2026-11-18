@@ -10,7 +10,7 @@
   display: none;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 700px) {
   #controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -23,7 +23,7 @@
 }
 
 #summary {
-  margin: 14px 0 10px;
+  margin: 8px 10px;
 
   font-size: 15px;
   line-height: 1.35;
@@ -61,21 +61,32 @@ canvas {
 }
 
 #outputCanvas {
-  height: 360px;
+  height: 220px;
 }
 
 #impulseCanvas,
 #responseCanvas {
-  height: 220px;
+  height: 170px;
 }
 
 @media (max-width: 640px) {
   #outputCanvas {
-    height: 320px;
+    height: 210px;
   }
 
   #impulseCanvas,
   #responseCanvas {
-    height: 200px;
+    height: 170px;
   }
+
+  #subplots { grid-template-columns: 1fr; }
+}
+
+/* Give the time plot and filter plots one shared row on laptop screens. */
+@media (min-width: 760px) {
+  #output { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px 12px; }
+  #outputCanvas { grid-column: 1; grid-row: 1; height: 280px; }
+  #subplots { grid-column: 2; grid-row: 1; grid-template-columns: 1fr; gap: 8px; }
+  #impulseCanvas, #responseCanvas { height: 136px; }
+  #plotLegend { grid-column: 1 / -1; grid-row: 2; }
 }

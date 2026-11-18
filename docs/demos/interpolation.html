@@ -8,10 +8,10 @@
 
   <link rel="stylesheet" href="../assets/css/design.css">
   <link rel="stylesheet" href="../assets/css/demo.css">
-  <link rel="stylesheet" href="../assets/css/demos/interpolation.css">
+  <link rel="stylesheet" href="../assets/css/demos/interpolation.css?v=20261118-compact-demos">
 
   <script src="../assets/js/demo-utils.js" defer></script>
-  <script src="../assets/js/demos/interpolation.js" defer></script>
+  <script src="../assets/js/demos/interpolation.js?v=20261118-compact-demos" defer></script>
 </head>
 
 <body class="demo-page">
@@ -27,15 +27,15 @@
         </div>
 
         <select id="methodSelect">
-          <option value="nearest">Nærmeste nabol</option>
+          <option value="nearest">Nærmeste nabo</option>
           <option value="cosine">Cosinus</option>
-          <option value="triangle">Trekant</option>
+          <option value="triangle">Lineær (trekantkjerne)</option>
           <option value="sinc">Sinc</option>
         </select>
       </div>
 
       <p class="hint">
-        Velg metode for å se hvordan verdiene mellom punktene blir tilnærmet.
+        Flytt markøren i figuren, eller fokuser figuren og bruk piltastene.
       </p>
 
     </section>
@@ -44,14 +44,17 @@
       id="plot"
       viewBox="0 0 900 520"
       role="img"
-      aria-label="Interpolasjon"
+      tabindex="0"
+      aria-label="Interpolasjon. Bruk venstre og høyre piltast for å flytte markøren."
+      aria-describedby="probeReadout"
     ></svg>
 
+    <p id="probeReadout" class="demo-readout" aria-live="polite"></p>
     <div id="top-banner" class="demo-footer">
       <img
         class="demo-footer-logo"
         src="../assets/images/UiB_PositivEmblem.png"
-        alt="University logo"
+        alt="UiB-logo"
       >
 
       <span>Universitetet i Bergen</span>

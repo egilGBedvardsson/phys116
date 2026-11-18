@@ -533,7 +533,7 @@ function buildLayout(
   width,
   nyquistFrequency
 ) {
-  const height = DemoUtils.plotHeight(600, 620, 0.6);
+  const height = 600;
   const margin = {
     l: width < 480 ? 48 : 62,
     r: 12,

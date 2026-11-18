@@ -254,6 +254,15 @@ function buildTraces(data) {
 // -----------------------------------------------------------------------------
 
 function buildLayout(width) {
+  const height = 600;
+  const margin = {
+    l: width < 480 ? 48 : 62,
+    r: 12,
+    t: width < 480 ? 58 : 32,
+    b: 42
+  };
+  const halfGap = 6 / (height - margin.t - margin.b);
+
   return {
     font: {
       family:
@@ -269,14 +278,8 @@ function buildLayout(width) {
 
     autosize: false,
     width,
-    height: DemoUtils.plotHeight(320, 420, 0.5),
-
-    margin: {
-      l: width < 480 ? 48 : 62,
-      r: 12,
-      t: 50,
-      b: 42
-    },
+    height,
+    margin,
 
     legend: {
       orientation: "h",
@@ -284,7 +287,7 @@ function buildLayout(width) {
       x: 0,
       xanchor: "left",
 
-      y: 1.08,
+      y: 1.02,
       yanchor: "bottom",
 
       font: {
@@ -292,7 +295,7 @@ function buildLayout(width) {
       },
 
       entrywidthmode: "fraction",
-      entrywidth: 0.32
+      entrywidth: width < 480 ? 0.5 : 0.32
     },
 
     yaxis: {
@@ -308,7 +311,7 @@ function buildLayout(width) {
       },
 
       range: [-1.5, 1.5],
-      domain: [0.55, 0.98],
+      domain: [0.5 + halfGap, 1],
 
       showline: true,
       mirror: true,
@@ -333,7 +336,7 @@ function buildLayout(width) {
       },
 
       range: [-2, 2],
-      domain: [0.02, 0.45],
+      domain: [0, 0.5 - halfGap],
 
       showline: true,
       mirror: true,

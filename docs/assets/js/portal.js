@@ -11,7 +11,7 @@
  * Change this when demo assets change substantially.
  * The value is appended to iframe and document URLs to reduce stale caching.
  */
-const ASSET_VERSION = "20261118-nyquist-height";
+const ASSET_VERSION = "20261118-conjugate-600";
 
 const DEMOS = {
   home: {
